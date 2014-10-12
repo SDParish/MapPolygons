@@ -10,26 +10,14 @@
         padding: 0px
       }
     </style>
-<!-- javascript based on example at https://developers.google.com/maps/documentation/javascript/examples/polygon-arrays -->
+<!-- Polygon drawing javascript based on example at https://developers.google.com/maps/documentation/javascript/examples/polygon-arrays
+	Setup to get data from form based on http://www.quirksmode.org/js/formex.html -->
 <!-- Google maps javascript API -->
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 <script type="text/javascript">
+var shapes;//array of Polygons -> might want to make into list
 var map;
-var shape;
-var shapeIndicies = [
-  new google.maps.LatLng(51.1, -0.7),
-  new google.maps.LatLng(51.1, -0.9),
-  new google.maps.LatLng(51.3, -0.9),
-  new google.maps.LatLng(51.3, -0.7)
- ];
-
-// Construct the polygon.
- shape = new google.maps.Polygon({
-   paths: shapeIndicies,
-   strokeColor: '#000000',
-   strokeOpacity: 0.8,
-   strokeWeight: 3,
-   });
+var shapeOld;
    
 function setUpMap(){
 	var mapOptions = {
@@ -38,14 +26,90 @@ function setUpMap(){
 		  };
 	map = new google.maps.Map(document.getElementById('mapArea'),
 		      mapOptions);
+	setUpShapes();
+}
+function setUpShapes(){
+	//first the original shape
+	var shapeIndicies = [
+	 new google.maps.LatLng(51.1, -0.7),
+	 new google.maps.LatLng(51.1, -0.9),
+	 new google.maps.LatLng(51.3, -0.9),
+	 new google.maps.LatLng(51.3, -0.7)
+	 ];
+	shapeOld = new google.maps.Polygon({
+	 paths: shapeIndicies,
+	 strokeColor: '#000000',
+	 strokeOpacity: 0.8,
+	 strokeWeight: 3,
+	 });
+	//now the shape array
+	shapes = new Array(4);//LOOK UP
+	var shape;
+	shapeIndicies = [
+	new google.maps.LatLng(51.2, -0.8),
+	new google.maps.LatLng(51.15, -0.85),
+	new google.maps.LatLng(51.25, -0.85),
+	];
+	shape = new google.maps.Polygon({
+	paths: shapeIndicies,
+	strokeColor: '#FF0000',
+	strokeOpacity: 0.8,
+	strokeWeight: 3,
+	});
+	shapes[0]=shape;
+	shapeIndicies = [
+	new google.maps.LatLng(51.2, -0.8),
+	new google.maps.LatLng(51.25, -0.85),
+	new google.maps.LatLng(51.25, -0.75),
+	];
+	shape = new google.maps.Polygon({
+	paths: shapeIndicies,
+	strokeColor: '#00FF00',
+	strokeOpacity: 0.8,
+	strokeWeight: 3,
+	});
+	shapes[1]=shape;
+	shapeIndicies = [
+	new google.maps.LatLng(51.2, -0.8),
+	new google.maps.LatLng(51.25, -0.75),
+	new google.maps.LatLng(51.15, -0.75),
+	];
+	shape = new google.maps.Polygon({
+	paths: shapeIndicies,
+	strokeColor: '#0000FF',
+	strokeOpacity: 0.8,
+	strokeWeight: 3,
+	});
+	shapes[2]=shape;
+	shapeIndicies = [
+	new google.maps.LatLng(51.2, -0.8),
+	new google.maps.LatLng(51.15, -0.75),
+	new google.maps.LatLng(51.15, -0.85),
+	];
+	shape = new google.maps.Polygon({
+	paths: shapeIndicies,
+	strokeColor: '#FFFFFF',
+	strokeOpacity: 0.8,
+	strokeWeight: 3,
+	});
+	shapes[3]=shape;
 }
 function test(){
-   <!-- Do something -->
-   if(shape.getMap()==map){
-	   shape.setMap(null);
+   if(shapeOld.getMap()==map){
+	   shapeOld.setMap(null);
    }else{
-	   shape.setMap(map);
+	   shapeOld.setMap(map);
    }
+}
+function toggleShapes(){
+	for (i=0;i<4;i++) {
+		if(document.checkboxForm.elements[i].checked){
+			shapes[i].setMap(map);
+		}else{
+			shapes[i].setMap(null);
+	   }
+	}
+	
 }
 
 google.maps.event.addDomListener(window, 'load', setUpMap);
@@ -61,9 +125,14 @@ Is however just a window with google maps in, so is a dead end for job at hand
 Instead set up in javascript - see head
 -->
 <div id="mapArea"></div>
-<form action="#" method="post">
-<button> Click me</button>
-<input type="text" name="zoom" value="13"/>
+<form name="checkboxForm" action="#" method="get">
+<!-- have checkboxes for n shapes, first fixed n, then try and make n variable -->
+<input type="checkbox" name="shape0Checked">Shape 0
+<input type="checkbox" name="shape1Checked">Shape 1
+<input type="checkbox" name="shape2Checked">Shape 2
+<input type="checkbox" name="shape3Checked">Shape 3
+<input type="button" name="refresh" value="Update map" onclick="toggleShapes(); return false"/>
+
 </form>
 <input type="button" onclick="test()" value="No, click ME" />
 </body>
