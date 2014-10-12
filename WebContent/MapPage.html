@@ -17,7 +17,7 @@
 <script type="text/javascript">
 var shapes;//array of Polygons -> might want to make into list
 var map;
-var shapeOld;
+var kmlLayerTest;
    
 function setUpMap(){
 	var mapOptions = {
@@ -26,25 +26,17 @@ function setUpMap(){
 		  };
 	map = new google.maps.Map(document.getElementById('mapArea'),
 		      mapOptions);
+	setUpKML();
 	setUpShapes();
 }
+function setUpKML(){
+	kmlLayerTest = new google.maps.KmlLayer();
+	kmlLayerTest.setUrl("https://sturents.com/geo/farnham-bourne-ward.kml");//Works, but using local copies doesn't
+}
 function setUpShapes(){
-	//first the original shape
-	var shapeIndicies = [
-	 new google.maps.LatLng(51.1, -0.7),
-	 new google.maps.LatLng(51.1, -0.9),
-	 new google.maps.LatLng(51.3, -0.9),
-	 new google.maps.LatLng(51.3, -0.7)
-	 ];
-	shapeOld = new google.maps.Polygon({
-	 paths: shapeIndicies,
-	 strokeColor: '#000000',
-	 strokeOpacity: 0.8,
-	 strokeWeight: 3,
-	 });
-	//now the shape array
-	shapes = new Array(4);//LOOK UP
+	shapes = new Array(4);
 	var shape;
+	var shapeIndicies;
 	shapeIndicies = [
 	new google.maps.LatLng(51.2, -0.8),
 	new google.maps.LatLng(51.15, -0.85),
@@ -95,10 +87,10 @@ function setUpShapes(){
 	shapes[3]=shape;
 }
 function test(){
-   if(shapeOld.getMap()==map){
-	   shapeOld.setMap(null);
+   if(kmlLayerTest.getMap()==map){
+	   kmlLayerTest.setMap(null);
    }else{
-	   shapeOld.setMap(map);
+	   kmlLayerTest.setMap(map);
    }
 }
 function toggleShapes(){
@@ -135,5 +127,6 @@ Instead set up in javascript - see head
 
 </form>
 <input type="button" onclick="test()" value="No, click ME" />
+<!-- copied from sturents <div class="gmap" data-kml="C:\Users\Stephen\Downloads\oxford.kml"></div> -->
 </body>
 </html>
