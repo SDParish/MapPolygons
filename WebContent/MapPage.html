@@ -15,76 +15,40 @@
 <!-- Google maps javascript API -->
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 <script type="text/javascript">
-var shapes;//array of Polygons -> might want to make into list
+//Consider storing kml permalinks in url i.e MapPage/guildford+guildford-district-b-+reading-b-
+var kmls;
 var map;
 var kmlLayerTest;
    
 function setUpMap(){
 	var mapOptions = {
-		     zoom: 13,
+		     zoom: 9,
 		     center: new google.maps.LatLng(51.2, -0.8)
 		  };
 	map = new google.maps.Map(document.getElementById('mapArea'),
 		      mapOptions);
 	setUpKML();
-	setUpShapes();
+	setUpKmlArray();
 }
 function setUpKML(){
 	kmlLayerTest = new google.maps.KmlLayer();
 	kmlLayerTest.setUrl("https://sturents.com/geo/farnham-bourne-ward.kml");//Works, but using local copies doesn't
 }
-function setUpShapes(){
-	shapes = new Array(4);
-	var shape;
-	var shapeIndicies;
-	shapeIndicies = [
-	new google.maps.LatLng(51.2, -0.8),
-	new google.maps.LatLng(51.15, -0.85),
-	new google.maps.LatLng(51.25, -0.85),
-	];
-	shape = new google.maps.Polygon({
-	paths: shapeIndicies,
-	strokeColor: '#FF0000',
-	strokeOpacity: 0.8,
-	strokeWeight: 3,
-	});
-	shapes[0]=shape;
-	shapeIndicies = [
-	new google.maps.LatLng(51.2, -0.8),
-	new google.maps.LatLng(51.25, -0.85),
-	new google.maps.LatLng(51.25, -0.75),
-	];
-	shape = new google.maps.Polygon({
-	paths: shapeIndicies,
-	strokeColor: '#00FF00',
-	strokeOpacity: 0.8,
-	strokeWeight: 3,
-	});
-	shapes[1]=shape;
-	shapeIndicies = [
-	new google.maps.LatLng(51.2, -0.8),
-	new google.maps.LatLng(51.25, -0.75),
-	new google.maps.LatLng(51.15, -0.75),
-	];
-	shape = new google.maps.Polygon({
-	paths: shapeIndicies,
-	strokeColor: '#0000FF',
-	strokeOpacity: 0.8,
-	strokeWeight: 3,
-	});
-	shapes[2]=shape;
-	shapeIndicies = [
-	new google.maps.LatLng(51.2, -0.8),
-	new google.maps.LatLng(51.15, -0.75),
-	new google.maps.LatLng(51.15, -0.85),
-	];
-	shape = new google.maps.Polygon({
-	paths: shapeIndicies,
-	strokeColor: '#FFFFFF',
-	strokeOpacity: 0.8,
-	strokeWeight: 3,
-	});
-	shapes[3]=shape;
+function setUpKmlArray(){//reading-b-, kingston-upon-thames-london-boro, guildford-district-b-, guildford, surrey-county, surrey
+	kmls = new Array(6);
+	kmls[0] = new google.maps.KmlLayer();
+	kmls[0].setUrl("https://sturents.com/geo/reading-b-.kml");
+	kmls[1] = new google.maps.KmlLayer();
+	kmls[1].setUrl("https://sturents.com/geo/kingston-upon-thames-london-boro.kml");
+	kmls[2] = new google.maps.KmlLayer();
+	kmls[2].setUrl("https://sturents.com/geo/guildford-district-b-.kml");
+	kmls[3] = new google.maps.KmlLayer();
+	kmls[3].setUrl("https://sturents.com/geo/guildford.kml");
+	kmls[4] = new google.maps.KmlLayer();
+	kmls[4].setUrl("https://sturents.com/geo/surrey-county.kml");
+	kmls[5] = new google.maps.KmlLayer();
+	kmls[5].setUrl("https://sturents.com/geo/surrey.kml");
+	
 }
 function test(){
    if(kmlLayerTest.getMap()==map){
@@ -93,12 +57,14 @@ function test(){
 	   kmlLayerTest.setMap(map);
    }
 }
-function toggleShapes(){
-	for (i=0;i<4;i++) {
+//for large numbers of kmls, might want different method - this re-sets the kmls each time
+function toggleKmls(){
+	//maybe add code to stop screen jumping to location of last kml that is checked
+	for (i=0;i<6;i++) {
 		if(document.checkboxForm.elements[i].checked){
-			shapes[i].setMap(map);
+			kmls[i].setMap(map);
 		}else{
-			shapes[i].setMap(null);
+			kmls[i].setMap(null);
 	   }
 	}
 	
@@ -118,12 +84,14 @@ Instead set up in javascript - see head
 -->
 <div id="mapArea"></div>
 <form name="checkboxForm" action="#" method="get">
-<!-- have checkboxes for n shapes, first fixed n, then try and make n variable -->
-<input type="checkbox" name="shape0Checked">Shape 0
-<input type="checkbox" name="shape1Checked">Shape 1
-<input type="checkbox" name="shape2Checked">Shape 2
-<input type="checkbox" name="shape3Checked">Shape 3
-<input type="button" name="refresh" value="Update map" onclick="toggleShapes(); return false"/>
+<!-- //reading-b-, reading, guildford-district-b-, guildford, surrey-county, surrey -->
+<input type="checkbox" name="shape0Checked">reading-b-
+<input type="checkbox" name="shape1Checked">kingston-upon-thames-london-boro
+<input type="checkbox" name="shape2Checked">guildford-district-b-
+<input type="checkbox" name="shape3Checked">guildford
+<input type="checkbox" name="shape4Checked">surrey-county
+<input type="checkbox" name="shape5Checked">surrey
+<input type="button" name="refresh" value="Update map" onclick="toggleKmls(); return false"/>
 
 </form>
 <input type="button" onclick="test()" value="No, click ME" />
