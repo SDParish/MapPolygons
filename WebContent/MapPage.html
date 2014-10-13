@@ -17,7 +17,8 @@
 var kmls;
 var map;
 var kmlLayerTest;
-var target ="farnham-bourne-ward";//initialised, just in case none in url
+var url_kmls;
+var show_url_kmls = false;
 
 function setUpMap(){
 	var mapOptions = {
@@ -32,11 +33,15 @@ function setUpMap(){
 function setUpKML(){
 	//format ...MapPage.html?aaaaa [&bbbbb&cccc...]
 	var startIndex = document.URL.indexOf("?");
+	var targets = new Array(0);
 	if(startIndex!=-1){
-		target = document.URL.substr(startIndex+1);
+		targets=document.URL.substr(startIndex+1).split("&");		
 	}
-	kmlLayerTest = new google.maps.KmlLayer();
-	kmlLayerTest.setUrl("https://sturents.com/geo/"+target+".kml");//Works, but using local copies doesn't
+	url_kmls=new Array(targets.length);
+	for(i=0;i<targets.length;i++){
+		url_kmls[i] = new google.maps.KmlLayer();
+		url_kmls[i].setUrl("https://sturents.com/geo/"+targets[i]+".kml");
+	}
 	//Would like to check if valid target, but status is not updated until call setMap (and it just returns OK anyway, and zooms out to whole world)
 }
 function setUpKmlArray(){//reading-b-, kingston-upon-thames-london-boro, guildford-district-b-, guildford, surrey-county, surrey
@@ -56,11 +61,16 @@ function setUpKmlArray(){//reading-b-, kingston-upon-thames-london-boro, guildfo
 	
 }
 function test(){
-   if(kmlLayerTest.getMap()==map){
-	   kmlLayerTest.setMap(null);
+	var temp;
+   if(show_url_kmls==true){
+	   temp =null;
    }else{
-	   kmlLayerTest.setMap(map);
+	   temp =map;
    }
+   for(i=0;i<url_kmls.length;i++){
+	   url_kmls[i].setMap(temp);
+   }
+   show_url_kmls=!show_url_kmls;
 }
 //for large numbers of kmls, might want different method - this re-sets the kmls each time
 function toggleKmls(){
