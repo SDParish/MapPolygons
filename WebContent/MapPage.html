@@ -18,7 +18,9 @@ var kmls;
 var map;
 var kmlLayerTest;
 var url_kmls;
+var urlCheckedBools;
 var show_url_kmls = false;
+var urlForm;
 
 function setUpMap(){
 	var mapOptions = {
@@ -30,18 +32,43 @@ function setUpMap(){
 	setUpKML();
 	setUpKmlArray();
 }
+
 function setUpKML(){
-	//format ...MapPage.html?aaaaa [&bbbbb&cccc...]
+	//format is: ...MapPage.html?aaaaa&bbbbb&cccc...
+	//Note that a Google map can only display so many layers
 	var startIndex = document.URL.indexOf("?");
 	var targets = new Array(0);
+	//Get an Array of all given locations
 	if(startIndex!=-1){
 		targets=document.URL.substr(startIndex+1).split("&");		
 	}
 	url_kmls=new Array(targets.length);
+	urlCheckedBools=new Array(targets.length);
+	urlForm = document.createElement("form");
+	var formElem;
 	for(i=0;i<targets.length;i++){
+		//Create a checkbox
+		formElem = document.createElement("input");
+		formElem.type = "checkbox";
+		formElem.name =targets[i];
+		//Add it to the form
+		urlForm.appendChild(formElem);
+		//Add the name after the checkbox
+		urlForm.appendChild(document.createTextNode(targets[i]));
+		//Set up the kml layer for the file.
 		url_kmls[i] = new google.maps.KmlLayer();
 		url_kmls[i].setUrl("https://sturents.com/geo/"+targets[i]+".kml");
+		urlCheckedBools[i]=false;
 	}
+	if(targets.length!=0){
+		//Now add a button to update the map
+		formElem = document.createElement("input");
+		formElem.type = "button";
+		formElem.value="Update map"; 
+		formElem.setAttribute("onclick"," toggleUrlKmls(); return false");
+		urlForm.appendChild(formElem);
+	}
+	document.getElementById("urlCheckboxDiv").appendChild(urlForm);
 	//Would like to check if valid target, but status is not updated until call setMap (and it just returns OK anyway, and zooms out to whole world)
 }
 function setUpKmlArray(){//reading-b-, kingston-upon-thames-london-boro, guildford-district-b-, guildford, surrey-county, surrey
@@ -67,10 +94,11 @@ function test(){
    }else{
 	   temp =map;
    }
+   show_url_kmls=!show_url_kmls;
    for(i=0;i<url_kmls.length;i++){
 	   url_kmls[i].setMap(temp);
+	   urlCheckedBools[i]=show_url_kmls;
    }
-   show_url_kmls=!show_url_kmls;
 }
 //for large numbers of kmls, might want different method - this re-sets the kmls each time
 function toggleKmls(){
@@ -81,8 +109,23 @@ function toggleKmls(){
 		}else{
 			kmls[i].setMap(null);
 	   }
-	}
-	
+	}	
+}
+function toggleUrlKmls(){
+	//For each kml from the url
+	for (i=0;i<url_kmls.length;i++) {
+		//If checkbox state does not make the stored state (stored state is the same as the map state)
+		if(urlForm.elements[i].checked!=urlCheckedBools[i]){
+			//change the map state
+			if(urlCheckedBools[i]){	
+				url_kmls[i].setMap(null);
+			}else{
+				url_kmls[i].setMap(map);
+			}
+			//change the stored state
+			urlCheckedBools[i]=!urlCheckedBools[i];
+	   }
+	}	
 }
 
 google.maps.event.addDomListener(window, 'load', setUpMap);
@@ -94,7 +137,6 @@ Map will go below when put in.
 </p>
 <div id="mapArea"></div>
 <form name="checkboxForm" action="#" method="get">
-<!-- //reading-b-, reading, guildford-district-b-, guildford, surrey-county, surrey -->
 <input type="checkbox" name="shape0Checked">reading-b-
 <input type="checkbox" name="shape1Checked">kingston-upon-thames-london-boro
 <input type="checkbox" name="shape2Checked">guildford-district-b-
@@ -103,6 +145,8 @@ Map will go below when put in.
 <input type="checkbox" name="shape5Checked">surrey
 <input type="button" name="refresh" value="Update map" onclick="toggleKmls(); return false"/>
 </form>
+<!-- Div to hold a dynamically generated form based on the locations in the url -->
+<div id="urlCheckboxDiv"></div>
 <input type="button" onclick="test()" value="No, click ME" />
 </body>
 </html>
