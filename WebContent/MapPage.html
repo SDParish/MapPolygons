@@ -18,6 +18,7 @@
 var shapes;//array of Polygons -> might want to make into list
 var map;
 var shapeOld;
+var checkedBools;
    
 function setUpMap(){
 	var mapOptions = {
@@ -43,7 +44,8 @@ function setUpShapes(){
 	 strokeWeight: 3,
 	 });
 	//now the shape array
-	shapes = new Array(4);//LOOK UP
+	shapes = new Array(4);
+	checkedBools = new Array(4);
 	var shape;
 	shapeIndicies = [
 	new google.maps.LatLng(51.2, -0.8),
@@ -57,6 +59,7 @@ function setUpShapes(){
 	strokeWeight: 3,
 	});
 	shapes[0]=shape;
+	checkedBools[0]=false;
 	shapeIndicies = [
 	new google.maps.LatLng(51.2, -0.8),
 	new google.maps.LatLng(51.25, -0.85),
@@ -69,6 +72,7 @@ function setUpShapes(){
 	strokeWeight: 3,
 	});
 	shapes[1]=shape;
+	checkedBools[1]=false;
 	shapeIndicies = [
 	new google.maps.LatLng(51.2, -0.8),
 	new google.maps.LatLng(51.25, -0.75),
@@ -81,6 +85,7 @@ function setUpShapes(){
 	strokeWeight: 3,
 	});
 	shapes[2]=shape;
+	checkedBools[2]=false;
 	shapeIndicies = [
 	new google.maps.LatLng(51.2, -0.8),
 	new google.maps.LatLng(51.15, -0.75),
@@ -93,6 +98,7 @@ function setUpShapes(){
 	strokeWeight: 3,
 	});
 	shapes[3]=shape;
+	checkedBools[3]=false;
 }
 function test(){
    if(shapeOld.getMap()==map){
@@ -103,11 +109,14 @@ function test(){
 }
 function toggleShapes(){
 	for (i=0;i<4;i++) {
-		if(document.checkboxForm.elements[i].checked){
-			shapes[i].setMap(map);
-		}else{
-			shapes[i].setMap(null);
-	   }
+		if(document.checkboxForm.elements[i].checked!=checkedBools[i]){
+			if(checkedBools[i]){
+				shapes[i].setMap(null);
+			}else{
+				shapes[i].setMap(map);
+	   		}
+			checkedBools[i]=!checkedBools[i];
+		}
 	}
 	
 }
