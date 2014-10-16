@@ -14,12 +14,15 @@
 <!-- Google maps javascript API -->
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 <script type="text/javascript">
-//Consider storing kml permalinks in url i.e MapPage/guildford+guildford-district-b-+reading-b-
 var kmls;
 var kmlsShown;
 var map;
 var kmlLayerTest;
-   
+var fullForm;
+var fullFormPlaceCount;
+var fullFormShowList;//Store the indicies (in fullForm) of the checkboxes for each kml
+var fullFormKmls;//The corresponding KmlLayers for each index in fullFormShowList
+
 function setUpMap(){
 	var mapOptions = {
 		     zoom: 9,
@@ -27,8 +30,73 @@ function setUpMap(){
 		  };
 	map = new google.maps.Map(document.getElementById('mapArea'),
 		      mapOptions);
+	downloadFullList();
 	setUpKML();
 	setUpKmlArray();
+}
+function downloadFullList(){//NB show-all does not actually show all possible tags.
+	var xmlhttp = new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+	if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+		setUpFullKmlList(JSON.parse(xmlhttp.responseText));
+	    }
+	}
+	xmlhttp.open("GET", "https://sturents.com/geo/show-all", true);
+	xmlhttp.send();
+}
+function setUpFullKmlList(showAll){
+	fullForm = document.createElement("form");
+	fullFormPlaceCount=0;
+	var formElem;
+	var place;
+	for(place in showAll){//place goes through the numbers, we use the names showAll[place]
+		//Create a checkbox
+		formElem = document.createElement("input");
+		formElem.type = "checkbox";
+		formElem.name =showAll[place];
+		//Add it to the form
+		fullForm.appendChild(formElem);
+		//Add the name after the checkbox
+		fullForm.appendChild(document.createTextNode(showAll[place]));
+		fullFormPlaceCount++;
+	}
+	//Now add a button to update the map
+		formElem = document.createElement("input");
+		formElem.type = "button";
+		formElem.value="Update map"; 
+		formElem.setAttribute("onclick"," updateKmls(); return false");
+		fullForm.appendChild(formElem);
+	document.getElementById("fullCheckboxDiv").appendChild(fullForm);
+	fullFormShowList = [];
+	fullFormKmls = [];
+}
+function updateKmls(){
+	//maintain ordered list/Array of displayed elements
+	//each cycle of loop, at arrayPosit in fullFormKmlList, where elements[fullFormKmlList[0...arrayPosit-1]].name are alphabetically <= elements[elementPosit].name <= elements[fullFormKmlList[arrayPosit]].name<elements[fullFormKmlList[arrayPosit+1....length]].name
+	var arrayPosit =0;
+	var newKml;
+	for(var elementPosit=0;elementPosit<fullFormPlaceCount;elementPosit++){
+		if(fullFormShowList[arrayPosit]==elementPosit){//if element is in the list
+			if(!(fullForm.elements[elementPosit].checked)){
+				//Here following the remove entirely idea. Could store 'recent locations' if think user might want to see them again
+				fullFormShowList.splice(arrayPosit,1);
+				fullFormKmls[arrayPosit].setMap(null);
+				fullFormKmls.splice(arrayPosit,1);
+				//arrayPosit stays same
+			}else{
+				arrayPosit++;
+			}
+		}else{//if element is NOT in the list
+			if(fullForm.elements[elementPosit].checked){
+				fullFormShowList.splice(arrayPosit,0,elementPosit);
+				newKml =new google.maps.KmlLayer();
+				newKml.setUrl("https://sturents.com/geo/"+fullForm.elements[elementPosit].name+".kml");
+				newKml.setMap(map);
+				fullFormKmls.splice(arrayPosit,0,newKml);
+				arrayPosit++;
+			}//else arrayPosit stays the same
+		}		
+	}
 }
 function setUpKML(){
 	kmlLayerTest = new google.maps.KmlLayer();
@@ -86,6 +154,8 @@ Map will go below when put in.
 <input type="button" name="refresh" value="Update map" onclick="toggleKmls(); return false"/>
 
 </form>
+<!-- Div to hold a dynamically generated form from https://sturents.com/geo/show-all -->
+<div id="fullCheckboxDiv"></div>
 <input type="button" onclick="test()" value="No, click ME" />
 </body>
 </html>
