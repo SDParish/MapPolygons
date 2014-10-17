@@ -18,10 +18,9 @@ var kmlsShown;
 var map;
 var fullForm;
 var fullFormPlaceCount;
-var fullFormShowList;//Store the indicies (in fullForm) of the checkboxes for each kml
-var fullFormKmls;//The corresponding KmlLayers for each index in fullFormShowList
 
 function setUpMap(){
+	alert("loading page");//used to show/prove page is not reloading
 	var mapOptions = {
 		     zoom: 9,
 		     center: new google.maps.LatLng(51.2, -0.8)
@@ -31,7 +30,7 @@ function setUpMap(){
 	downloadFullList();
 	setUpKmlArray();
 }
-function downloadFullList(){//NB show-all does not actually show all possible tags.
+function downloadFullList(){//NB show-all does not actually show all possible tags, and some shown tags seem not to work.
 	var xmlhttp = new XMLHttpRequest();
 	xmlhttp.onreadystatechange = function() {
 	if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
@@ -59,8 +58,6 @@ function setUpFullKmlList(showAll){
 		fullFormPlaceCount++;
 	}
 	document.getElementById("fullCheckboxDiv").appendChild(fullForm);
-	fullFormShowList = [];
-	fullFormKmls = [];
 }
 function setUpKmlArray(){
 	kmls = new Array(6);
@@ -94,10 +91,17 @@ var singleKmlNames=[];//The strings corresponding to the KmlLayers created by th
 function singleOn(urlname){
 	var newKml =new google.maps.KmlLayer();
 	newKml.setUrl("https://sturents.com/geo/"+urlname+".kml");
-	alert(urlname);
 	newKml.setMap(map);
 	singleKmls.splice(0,0,newKml);
 	singleKmlNames.splice(0,0,urlname);
+	//Append urlname to shown kmls in url
+	if(window.location.hash.length==0){//no current kmls in url
+		window.location.hash+=(urlname);
+	}else{//there are kmls in url
+		window.location.hash+=("&"+urlname);
+	}//using hash '#' rather than search '?' makes url work nicely (search reloads page)
+	//BUT back goes straight to nothing at all (in location.hash), leavng map/page same.
+	//see window.onhashchange, pushState()
 }
 function singleOff(urlname){
 	var index = singleKmlNames.indexOf(urlname);
@@ -105,6 +109,17 @@ function singleOff(urlname){
 		singleKmls[index].setMap(null);
 		singleKmls.splice(index,1);
 		singleKmlNames.splice(index,1);
+		//remove urlname from url
+		var paramStart = window.location.hash.indexOf(urlname);
+		if(paramStart!=-1){//i.e. it's in the url
+			var newHashStart = window.location.hash.substring(0,paramStart);
+			var newHashEnd = window.location.hash.substring(paramStart+urlname.length)
+			if(newHashEnd.length==0){//if no subsequent location in url, remove last symbol from newHashStart and set as the hash
+				window.location.hash=newHashStart.substring(0,newHashStart.length-1); 
+			}else{//remove the head element of newHashEnd (will be '&'), and set hash to be newHashStart followed by newHashEnd
+				window.location.hash=newHashStart+newHashEnd.substring(1,newHashEnd.length);
+			}
+		}
 	}	
 }
 
