@@ -13,16 +13,10 @@
 <!-- Google maps javascript API -->
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 <script type="text/javascript">
-var kmls;
-var kmlsShown;
 var map;
 var fullForm;
-var fullFormPlaceCount;
-var kmlLayerTest;
-var url_kmls;
-var urlCheckedBools;
-var show_url_kmls = false;
-var urlForm;
+var singleKmls=[];//The KmlLayers created by the singleOn method, newest in [0], in age order
+var singleKmlNames=[];//The strings corresponding to the KmlLayers created by the singleOn method, newest in [0], in age order
 
 function setUpMap(){
 	alert("loading page");//used to show/prove page is not reloading
@@ -33,7 +27,7 @@ function setUpMap(){
 	map = new google.maps.Map(document.getElementById('mapArea'),
 		      mapOptions);
 	downloadFullList();
-	setUpKmlArray();
+	setUpInitialKmls();
 }
 function downloadFullList(){//NB show-all does not actually show all possible tags, and some shown tags seem not to work.
 	var xmlhttp = new XMLHttpRequest();
@@ -45,47 +39,8 @@ function downloadFullList(){//NB show-all does not actually show all possible ta
 	xmlhttp.open("GET", "https://sturents.com/geo/show-all", true);
 	xmlhttp.send();
 }
-function setUpKML(){
-	//format is: ...MapPage.html?aaaaa&bbbbb&cccc...
-	//Note that a Google map can only display so many layers
-	var startIndex = document.URL.indexOf("?");
-	var targets = new Array(0);
-	//Get an Array of all given locations
-	if(startIndex!=-1){
-		targets=document.URL.substr(startIndex+1).split("&");		
-	}
-	url_kmls=new Array(targets.length);
-	urlCheckedBools=new Array(targets.length);
-	urlForm = document.createElement("form");
-	var formElem;
-	for(i=0;i<targets.length;i++){
-		//Create a checkbox
-		formElem = document.createElement("input");
-		formElem.type = "checkbox";
-		formElem.name =targets[i];
-		//Add it to the form
-		urlForm.appendChild(formElem);
-		//Add the name after the checkbox
-		urlForm.appendChild(document.createTextNode(targets[i]));
-		//Set up the kml layer for the file.
-		url_kmls[i] = new google.maps.KmlLayer();
-		url_kmls[i].setUrl("https://sturents.com/geo/"+targets[i]+".kml");
-		urlCheckedBools[i]=false;
-	}
-	if(targets.length!=0){
-		//Now add a button to update the map
-		formElem = document.createElement("input");
-		formElem.type = "button";
-		formElem.value="Update map"; 
-		formElem.setAttribute("onclick"," toggleUrlKmls(); return false");
-		urlForm.appendChild(formElem);
-	}
-	document.getElementById("urlCheckboxDiv").appendChild(urlForm);
-	//Would like to check if valid target, but status is not updated until call setMap (and it just returns OK anyway, and zooms out to whole world)
-}
 function setUpFullKmlList(showAll){
 	fullForm = document.createElement("form");
-	fullFormPlaceCount=0;
 	var formElem;
 	var place;
 	for(place in showAll){//place goes through the numbers, we use the names showAll[place]
@@ -93,52 +48,43 @@ function setUpFullKmlList(showAll){
 		formElem = document.createElement("input");
 		formElem.type = "checkbox";
 		formElem.name =showAll[place];
-		formElem.setAttribute("onclick","if(checked){singleOn(name);}else{singleOff(name)}")
+		formElem.setAttribute("onclick","if(checked){singleOn(name);}else{singleOff(name)}");
 		//Add it to the form
 		fullForm.appendChild(formElem);
 		//Add the name after the checkbox
 		fullForm.appendChild(document.createTextNode(showAll[place]));
-		fullFormPlaceCount++;
 	}
 	document.getElementById("fullCheckboxDiv").appendChild(fullForm);
 }
-function setUpKmlArray(){
-	kmls = new Array(6);
-	kmlsShown = new Array(6);
-	for (i=0;i<6;i++) {
-		kmlsShown[i]=false;
-	}	
+//To change - see if can set to be called by changes to the has
+function setUpInitialKmls(){
+	//format is: ...MapPage.html#aaaaa&bbbbb&cccc...
+	//Note that a Google map can only display so many layers
+	var targets = new Array(0);
+	//Get an Array of all given locations
+	if(window.location.hash.length!=0){
+		targets=window.location.hash.substring(1).split("&");		
+	}
+	for(i=0;i<targets.length;i++){
+		//TODO
+		//check checkbox and add to map
+		//fullForm.targets[i].checked=true;
+		addKml(targets[i]);
+	}
+	//Would like to check if valid target, but status is not updated until call setMap (and it just returns OK anyway, and zooms out to whole world)
 }
-<!-- Setup to get data from form based on http://www.quirksmode.org/js/formex.html -->
-function toggleKmls(){
-	for (i=0;i<6;i++) {
-		if(document.checkboxForm.elements[i].checked!=kmlsShown[i]){
-			if(kmlsShown[i]){
-				//could change to removing the kml from kmls - depends on whether having previously selected it means it may want to be selected again, and the costs of recreation vs storage
-				kmls[i].setMap(null);
-			}else{
-				if(kmls[i]==null){
-					kmls[i]= new google.maps.KmlLayer();
-					kmls[i].setUrl("https://sturents.com/geo/"+document.checkboxForm.elements[i].name+".kml");
-					alert("Created: "+document.checkboxForm.elements[i].name);
-				}
-				kmls[i].setMap(map);
-			}
-			kmlsShown[i]=!kmlsShown[i];
-	   }
-	}	
-}
-var singleKmls=[];//The KmlLayers created by the singleOn method, newest in [0], in age order
-var singleKmlNames=[];//The strings corresponding to the KmlLayers created by the singleOn method, newest in [0], in age order
-//Don't bother with order, just stick on end, do random access - when doing 1 at a time order adds nothing of use.
-function singleOn(urlname){
+function addKml(urlname){//separate method so can also be called when url is changed
 	var newKml =new google.maps.KmlLayer();
 	newKml.setUrl("https://sturents.com/geo/"+urlname+".kml");
 	newKml.setMap(map);
 	singleKmls.splice(0,0,newKml);
 	singleKmlNames.splice(0,0,urlname);
+}
+//Don't bother with order, just stick on end, do random access - when doing 1 at a time order adds nothing of use.
+function singleOn(urlname){
 	//Append urlname to shown kmls in url
-	if(window.location.hash.length==0){//no current kmls in url
+	addKml(urlname);
+	if(window.location.hash.length=<1){//no current kmls in url
 		window.location.hash+=(urlname);
 	}else{//there are kmls in url
 		window.location.hash+=("&"+urlname);
@@ -174,19 +120,7 @@ google.maps.event.addDomListener(window, 'load', setUpMap);
 Map will go below when put in.
 </p>
 <div id="mapArea"></div>
-<form name="checkboxForm" action="#" method="get">
-<!-- //reading-b-, reading, guildford-district-b-, guildford, surrey-county, surrey -->
-<input type="checkbox" name="reading-b-">reading-b-
-<input type="checkbox" name="kingston-upon-thames-london-boro">kingston-upon-thames-london-boro
-<input type="checkbox" name="guildford-district-b-">guildford-district-b-
-<input type="checkbox" name="guildford">guildford
-<input type="checkbox" name="surrey-county">surrey-county
-<input type="checkbox" name="surrey">surrey
-<input type="button" name="refresh" value="Update map" onclick="toggleKmls(); return false"/>
-</form>
 <!-- Div to hold a dynamically generated form from https://sturents.com/geo/show-all -->
 <div id="fullCheckboxDiv"></div>
-<!-- Div to hold a dynamically generated form based on the locations in the url -->
-<div id="urlCheckboxDiv"></div>
 </body>
 </html>
