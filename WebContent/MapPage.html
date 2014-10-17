@@ -18,6 +18,11 @@ var kmlsShown;
 var map;
 var fullForm;
 var fullFormPlaceCount;
+var kmlLayerTest;
+var url_kmls;
+var urlCheckedBools;
+var show_url_kmls = false;
+var urlForm;
 
 function setUpMap(){
 	alert("loading page");//used to show/prove page is not reloading
@@ -39,6 +44,44 @@ function downloadFullList(){//NB show-all does not actually show all possible ta
 	}
 	xmlhttp.open("GET", "https://sturents.com/geo/show-all", true);
 	xmlhttp.send();
+}
+function setUpKML(){
+	//format is: ...MapPage.html?aaaaa&bbbbb&cccc...
+	//Note that a Google map can only display so many layers
+	var startIndex = document.URL.indexOf("?");
+	var targets = new Array(0);
+	//Get an Array of all given locations
+	if(startIndex!=-1){
+		targets=document.URL.substr(startIndex+1).split("&");		
+	}
+	url_kmls=new Array(targets.length);
+	urlCheckedBools=new Array(targets.length);
+	urlForm = document.createElement("form");
+	var formElem;
+	for(i=0;i<targets.length;i++){
+		//Create a checkbox
+		formElem = document.createElement("input");
+		formElem.type = "checkbox";
+		formElem.name =targets[i];
+		//Add it to the form
+		urlForm.appendChild(formElem);
+		//Add the name after the checkbox
+		urlForm.appendChild(document.createTextNode(targets[i]));
+		//Set up the kml layer for the file.
+		url_kmls[i] = new google.maps.KmlLayer();
+		url_kmls[i].setUrl("https://sturents.com/geo/"+targets[i]+".kml");
+		urlCheckedBools[i]=false;
+	}
+	if(targets.length!=0){
+		//Now add a button to update the map
+		formElem = document.createElement("input");
+		formElem.type = "button";
+		formElem.value="Update map"; 
+		formElem.setAttribute("onclick"," toggleUrlKmls(); return false");
+		urlForm.appendChild(formElem);
+	}
+	document.getElementById("urlCheckboxDiv").appendChild(urlForm);
+	//Would like to check if valid target, but status is not updated until call setMap (and it just returns OK anyway, and zooms out to whole world)
 }
 function setUpFullKmlList(showAll){
 	fullForm = document.createElement("form");
@@ -140,9 +183,10 @@ Map will go below when put in.
 <input type="checkbox" name="surrey-county">surrey-county
 <input type="checkbox" name="surrey">surrey
 <input type="button" name="refresh" value="Update map" onclick="toggleKmls(); return false"/>
-
 </form>
 <!-- Div to hold a dynamically generated form from https://sturents.com/geo/show-all -->
 <div id="fullCheckboxDiv"></div>
+<!-- Div to hold a dynamically generated form based on the locations in the url -->
+<div id="urlCheckboxDiv"></div>
 </body>
 </html>
