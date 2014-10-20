@@ -19,6 +19,7 @@
 var kmls;
 var map;
 var kmlLayerTest;
+var kmlXML;
    
 function setUpMap(){
 	var mapOptions = {
@@ -28,12 +29,32 @@ function setUpMap(){
 	map = new google.maps.Map(document.getElementById('mapArea'),
 		      mapOptions);
 	setUpKML();
-	setUpKmlArray();
+	//setUpKmlArray();
 }
 function setUpKML(){
+	downloadKml("https://sturents.com/geo/farnham-bourne-ward.kml");
+	//get the first (only) Style tag's first (only) PolyStyle tag's first (only) color tag's first (only) child's value
+	alert(kmlXML.getElementsByTagName("Style")[0].getElementsByTagName("PolyStyle")[0].getElementsByTagName("color")[0].childNodes[0].nodeValue);
+	kmlXML.getElementsByTagName("Style")[0].getElementsByTagName("PolyStyle")[0].getElementsByTagName("color")[0].childNodes[0].nodeValue='ffffffff';
+	alert(kmlXML.getElementsByTagName("Style")[0].getElementsByTagName("PolyStyle")[0].getElementsByTagName("color")[0].childNodes[0].nodeValue);
+	//above 3 lines show color, change color, and show color (which is the new value.)
 	kmlLayerTest = new google.maps.KmlLayer();
-	kmlLayerTest.setUrl("https://sturents.com/geo/farnham-bourne-ward.kml");//Works, but using local copies doesn't
+	//so far unable pass document on and have it work
+	//kmlLayerTest.setUrl();
+	alert("done");
 }
+function downloadKml(url){
+	var xmlhttp = new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+	if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+		kmlXML =xmlhttp.responseXML;
+		alert("downloaded");
+		}
+	}
+	xmlhttp.open("GET", url, false);
+	xmlhttp.send();
+}
+
 function setUpKmlArray(){//reading-b-, kingston-upon-thames-london-boro, guildford-district-b-, guildford, surrey-county, surrey
 	kmls = new Array(6);
 	kmls[0] = new google.maps.KmlLayer();
