@@ -17,7 +17,9 @@
 <script type="text/javascript">
 var shapes;//array of Polygons -> might want to make into list
 var map;
+var shapeOldIndicies;
 var shapeOld;
+var shapeOldColour = [1,1,1];
 var checkedBools;
    
 function setUpMap(){
@@ -29,25 +31,32 @@ function setUpMap(){
 		      mapOptions);
 	setUpShapes();
 }
+function downloadShape(url){
+	var xmlhttp = new XMLHttpRequest();
+	xmlhttp.onreadystatechange = function() {
+	if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+		setUpShape(JSON.parse(xmlhttp.responseText));
+	    }
+	}
+	xmlhttp.open("GET", url, false);
+	xmlhttp.send();
+}
+function setUpShape(jsonData){//Name actually a lie, as once made, a shape's colour is fixed. Could, however, be made to create a shapeOptions that totally defines a shape instead
+	var points = jsonData.geometry.coordinates[0];
+	alert(points.length);
+	shapeOldIndicies = [];
+	for(i=0;i<points.length;i++){
+		shapeOldIndicies[i]= new google.maps.LatLng(points[i][1],points[i][0]);//may need to swap order
+	}
+}
 function setUpShapes(){
 	//first the original shape
-	var shapeIndicies = [
-	 new google.maps.LatLng(51.1, -0.7),
-	 new google.maps.LatLng(51.1, -0.9),
-	 new google.maps.LatLng(51.3, -0.9),
-	 new google.maps.LatLng(51.3, -0.7)
-	 ];
-	shapeOld = new google.maps.Polygon({
-	 paths: shapeIndicies,
-	 strokeColor: '#000000',
-	 strokeOpacity: 0.8,
-	 strokeWeight: 3,
-	 });
+	downloadShape("https://sturents.com/geo/guildford-district-b-.json");
 	//now the shape array
 	shapes = new Array(4);
 	checkedBools = new Array(4);
 	var shape;
-	shapeIndicies = [
+	var shapeIndicies = [
 	new google.maps.LatLng(51.2, -0.8),
 	new google.maps.LatLng(51.15, -0.85),
 	new google.maps.LatLng(51.25, -0.85),
@@ -101,11 +110,67 @@ function setUpShapes(){
 	checkedBools[3]=false;
 }
 function test(){
-   if(shapeOld.getMap()==map){
+   if(shapeOld!=null){
+	   shift(shapeOldColour );
 	   shapeOld.setMap(null);
-   }else{
+	   shapeOld=null;
+   }else{//shape created here so can set colour
+	   shapeOld = new google.maps.Polygon({
+			 paths: shapeOldIndicies,
+			 strokeColor: hexify(shapeOldColour ),
+			 strokeOpacity: 0.8,
+			 strokeWeight: 3,
+			 });
 	   shapeOld.setMap(map);
    }
+}
+//change the colour
+function shift (arr){
+	for(i=0;i<arr.length;i++){
+		arr[i]=2*arr[i];
+		if(arr[i]>256){
+			arr[i]=1;
+		}
+	}
+}
+//convert rgb value to hex 
+function hexify(arr){
+	var str="#";
+	for(i=0;i<arr.length;i++){
+		if((arr[i]<=256)&(arr[i]>0)){
+			var sec = (arr[i]-1)%16;
+			var fir = ((arr[i]-1)-sec)/16;
+			str+=(hexInt(fir)+hexInt(sec));
+		}else{
+			str+="00";
+		}
+	}
+	return str;
+}
+//See above method
+function hexInt(i){
+	var str;
+	if((i>0)&(i<10)){
+		str=i.toString();
+	}else{
+		switch (i)
+		{
+	  	case 10: str="a";
+     		 break;
+	  	case 11: str="b";
+      		break;
+      	case 12: str="c";
+			 break;
+      	case 13: str="d";
+     		 break;
+		case 14: str="e";
+		 	break;
+		case 15: str="f";
+   			 break;
+	  	default: str="0";
+		}		
+	}
+	return str;
 }
 function toggleShapes(){
 	for (i=0;i<4;i++) {
