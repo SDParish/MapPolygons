@@ -24,10 +24,8 @@ function setUpMap(){
 		     zoom: 9,
 		     center: new google.maps.LatLng(51.2, -0.8)
 		  };
-	map = new google.maps.Map(document.getElementById('mapArea'),
-		      mapOptions);
-	downloadFullList();
-	setUpInitialKmls();
+	map = new google.maps.Map(document.getElementById('mapArea'),mapOptions);
+	downloadFullList();//This is partly asynchronous, so may not be complete before subsequent actions
 }
 function downloadFullList(){//NB show-all does not actually show all possible tags, and some shown tags seem not to work.
 	var xmlhttp = new XMLHttpRequest();
@@ -41,6 +39,7 @@ function downloadFullList(){//NB show-all does not actually show all possible ta
 }
 function setUpFullKmlList(showAll){
 	fullForm = document.createElement("form");
+	fullForm.name = "fullForm";
 	var formElem;
 	var place;
 	for(place in showAll){//place goes through the numbers, we use the names showAll[place]
@@ -55,23 +54,28 @@ function setUpFullKmlList(showAll){
 		fullForm.appendChild(document.createTextNode(showAll[place]));
 	}
 	document.getElementById("fullCheckboxDiv").appendChild(fullForm);
+	//below here to ensure that the form is set up when ut runs
+	setUpInitialKmls();
 }
-//To change - see if can set to be called by changes to the has
+//To change - see if can set to be called by changes to the hash - will need to see if triggered by singleOn/Off
 function setUpInitialKmls(){
 	//format is: ...MapPage.html#aaaaa&bbbbb&cccc...
 	//Note that a Google map can only display so many layers
 	var targets = new Array(0);
 	//Get an Array of all given locations
-	if(window.location.hash.length!=0){
+	if(window.location.hash.length>1){
 		targets=window.location.hash.substring(1).split("&");		
 	}
 	for(i=0;i<targets.length;i++){
-		//TODO
 		//check checkbox and add to map
-		//fullForm.targets[i].checked=true;
-		addKml(targets[i]);
+		addKml(targets[i]);	
+		for(j=0;j<fullForm.elements.length;j++){
+			if(fullForm.elements[j].name==targets[i]){
+				fullForm.elements[j].checked =true;
+				j=fullForm.elements.length;
+			}
+		}
 	}
-	//Would like to check if valid target, but status is not updated until call setMap (and it just returns OK anyway, and zooms out to whole world)
 }
 function addKml(urlname){//separate method so can also be called when url is changed
 	var newKml =new google.maps.KmlLayer();
@@ -84,12 +88,12 @@ function addKml(urlname){//separate method so can also be called when url is cha
 function singleOn(urlname){
 	//Append urlname to shown kmls in url
 	addKml(urlname);
-	if(window.location.hash.length=<1){//no current kmls in url
-		window.location.hash+=(urlname);
-	}else{//there are kmls in url
+	if(window.location.hash.length>1){//there are kmls in url
 		window.location.hash+=("&"+urlname);
+	}else{//no current kmls in url
+		window.location.hash+=(urlname);
 	}//using hash '#' rather than search '?' makes url work nicely (search reloads page)
-	//BUT back goes straight to nothing at all (in location.hash), leavng map/page same.
+	//BUT back goes straight to nothing at all shown (does go 'back' in terms of the [now unshown] hash), leavng map/page same.
 	//see window.onhashchange, pushState()
 }
 function singleOff(urlname){
@@ -111,7 +115,6 @@ function singleOff(urlname){
 		}
 	}	
 }
-
 google.maps.event.addDomListener(window, 'load', setUpMap);
 </script>
 </head>
