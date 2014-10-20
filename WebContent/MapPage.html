@@ -57,7 +57,8 @@ function setUpFullKmlList(showAll){
 	//below here to ensure that the form is set up when ut runs
 	setUpInitialKmls();
 }
-//To change - see if can set to be called by changes to the hash - will need to see if triggered by singleOn/Off
+//See if can set to be called by manual changes to the hash - will need to see if triggered by singleOn/Off
+//window.onhashchange triggered by page reload, but not by typing in url and clicking elsewhere, or by singleOn/Off
 function setUpInitialKmls(){
 	//format is: ...MapPage.html#aaaaa&bbbbb&cccc...
 	//Note that a Google map can only display so many layers
@@ -66,13 +67,17 @@ function setUpInitialKmls(){
 	if(window.location.hash.length>1){
 		targets=window.location.hash.substring(1).split("&");		
 	}
+	//Add new kmls
 	for(i=0;i<targets.length;i++){
-		//check checkbox and add to map
-		addKml(targets[i]);	
-		for(j=0;j<fullForm.elements.length;j++){
-			if(fullForm.elements[j].name==targets[i]){
-				fullForm.elements[j].checked =true;
-				j=fullForm.elements.length;
+		//check not already shown
+		if(singleKmlNames.indexOf(targets[i])==-1){
+			//check checkbox and add to map
+			addKml(targets[i]);	
+			for(j=0;j<fullForm.elements.length;j++){
+				if(fullForm.elements[j].name==targets[i]){
+					fullForm.elements[j].checked =!fullForm.elements[j].checked;
+					j=fullForm.elements.length;
+				}
 			}
 		}
 	}
@@ -87,14 +92,16 @@ function addKml(urlname){//separate method so can also be called when url is cha
 //Don't bother with order, just stick on end, do random access - when doing 1 at a time order adds nothing of use.
 function singleOn(urlname){
 	//Append urlname to shown kmls in url
-	addKml(urlname);
-	if(window.location.hash.length>1){//there are kmls in url
-		window.location.hash+=("&"+urlname);
-	}else{//no current kmls in url
-		window.location.hash+=(urlname);
-	}//using hash '#' rather than search '?' makes url work nicely (search reloads page)
-	//BUT back goes straight to nothing at all shown (does go 'back' in terms of the [now unshown] hash), leavng map/page same.
-	//see window.onhashchange, pushState()
+	//check not already shown
+	if(singleKmlNames.indexOf(urlname)==-1){
+		addKml(urlname);
+		if(window.location.hash.length>1){//there are kmls in url
+			window.location.hash+=("&"+urlname);
+		}else{//no current kmls in url
+			window.location.hash+=(urlname);
+		}//using hash '#' rather than search '?' makes url work nicely (search reloads page)
+	}//BUT back goes straight to nothing at all shown (does go 'back' in terms of the [now unshown] hash), leavng map/page same.
+		//see window.onhashchange, pushState()
 }
 function singleOff(urlname){
 	var index = singleKmlNames.indexOf(urlname);
