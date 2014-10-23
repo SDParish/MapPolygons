@@ -17,9 +17,9 @@
 <script type="text/javascript" src="geoxml3.js"></script>
 <script type="text/javascript">
 //Consider storing kml permalinks in url i.e MapPage/guildford+guildford-district-b-+reading-b-
-var kmls;
+//surrey, guildford are null, caerffili-.. is not appearing?
+var kmlStrings =["caerdydd-cardiff","caerffili-caerphilly","farnham-bourne-ward", "surrey-heath-district-b-","guildford-district-b-","reading-b-","rushmoor-district-b-","east-hampshire-district","epsom-and-ewell-district-b-","hammersmith-and-fulham-london-boro","harrow-london-boro","merton-london-boro","islington-london-boro","kensington-and-chelsea-london-boro","barking-and-dagenham-london-boro","tower-hamlets-london-boro","windsor-and-maidenhead-b-","waltham-forest-london-boro","wandsworth-london-boro","city-and-county-of-the-city-of-london","barnet-london-boro","enfield-london-boro","greenwich-london-boro","hackney-london-boro","haringey-london-boro","hillingdon-london-boro","southwark-london-boro","boston-district-b-"];
 var myMap;
-var kmlLayerTest;
 var kmlXML;
 var geoxml3Parser;
 var geoON;
@@ -34,55 +34,78 @@ function setUpMap(){
 	geoxml3Parser = new geoXML3.parser({map: myMap});
 	setUpKML();
 }
-/* highlightOptions, the comment in testColour(), and the original testColour() function (from which only poly.polygon.setOptions, and part of the line in test() calling testColour remain) are based on code from: 
- * http://www.geocodezip.com/geoxml3_test/v3_geoxml3_kmltest_linktoB.html?filename=http://www.geocodezip.com/geoxml3_test/wnmapcrm_free_fr_tests_ouest_r_kml.xml
-*/
-var highlightOptions = [{fillColor: "#FFFF00", strokeColor: "#00ff00", fillOpacity: 0.9, strokeWidth: 10},{fillColor: "#0000ff", strokeColor: "#ff00ff", fillOpacity: 0.9, strokeWidth: 10}];
-var col =0;
-//toggles the colour of the given polygon - note that as is, implicit that there is only one polygon.
-function testColour(poly){
-	/*var normalStyle = {//extract style from geoxml entry
-	          strokeColor: poly.polygon.get('strokeColor'),
-	          strokeWeight: poly.polygon.get('strokeWeight'),
-	          strokeOpacity: poly.polygon.get('strokeOpacity'),
-	          fillColor: poly.polygon.get('fillColor'),
-	          fillOpacity: poly.polygon.get('fillOpacity')
-	          };
-	alert(normalStyle.strokeColor+"\n"+normalStyle.strokeWeight+"\n"+normalStyle.strokeOpacity+"\n"+normalStyle.fillColor+"\n"+normalStyle.fillOpacity);
-	*/
-	poly.polygon.setOptions(highlightOptions[col]);
-	col = 1-col;
+var highlightOptions = {fillColor: "#008f8f", strokeColor: "#8f8f8f", fillOpacity: 0.5, strokeWidth: 10};
+//shifts the colour of the given polygon
+function testColour(colourNumber){
+	geoxml3Parser.docs[colourNumber].placemarks[0].polygon.setOptions(highlightOptions);
+	shiftHighlightOptions();
+}
+var col=0;
+var colors = ["#000000","#ff0000","#00ff00","#ffff00","#0000ff","#ff00ff","#00ffff","#ffffff","#8f0000","#008f00","#8f8f00","#00008f","#8f008f","#008f8f","#8f8f8f"]
+//causes highlightOptions to iterate through various colours
+function shiftHighlightOptions(){
+	highlightOptions.fillColor =highlightOptions.strokeColor;
+	highlightOptions.strokeColor = colors[col];
+	col++;
+	if(col==colors.length){
+		col=0;
+	}
+}
+//serializeXmlNode based on code from the below address is addded as window.XMLSerializer caused errors on vista IE9 - while (typeof window.XMLSerializer != "undefined") was true, got SCRIPT16386: No such interface supported when tried (new window.XMLSerializer()).serializeToString(xmlNode)
+//http://stackoverflow.com/questions/4916327/javascript-replacement-for-xmlserializer-serializetostring
+function serializeXmlNode(xmlNode) {
+   try {
+        return (new window.XMLSerializer()).serializeToString(xmlNode);
+    }catch(e){
+    	 if (typeof xmlNode.xml != "undefined") {
+    		return xmlNode.xml;
+    	}
+    }
+    return "";
 }
 function setUpKML(){
-	downloadKml("https://sturents.com/geo/farnham-bourne-ward.kml");
-	//get the first (only) Style tag's first (only) PolyStyle tag's first (only) color tag's first (only) child's value
-	kmlXML.getElementsByTagName("Style")[0].getElementsByTagName("PolyStyle")[0].getElementsByTagName("color")[0].childNodes[0].nodeValue='ff00ff00';
-	kmlXML.getElementsByTagName("Style")[0].getElementsByTagName("PolyStyle")[0].getElementsByTagName("fill")[0].childNodes[0].nodeValue='1';
-	//above lines change fill color, set fill to be shown
-	var string = (new XMLSerializer()).serializeToString(kmlXML);
-	geoxml3Parser.parseKmlString(string);
-	geoON =true;
-	alert("done");
+	for(var i=0;i<kmlStrings.length;i++){
+		downloadKml("https://sturents.com/geo/"+kmlStrings[i]+".kml");
+		geoxml3Parser.parseKmlString(serializeXmlNode(kmlXML));
+	}
+	alert("kmlStrings length "+kmlStrings.length+"\n"+"geoxml3Parser.docs length "+geoxml3Parser.docs.length);
+	geoON=true;
+	alert("setUpKML");
+	for(var i=0;i<geoxml3Parser.docs.length;i++){
+		if(geoxml3Parser.docs[i].placemarks[0].polygon==null){
+			alert("poly "+i);
+		}else{
+			if(geoxml3Parser.docs[i].placemarks[0].polygon.getOptions ==null){//all are null
+				alert("options "+i);
+			}
+			geoxml3Parser.docs[i].placemarks[0].polygon.setOptions(highlightOptions);
+			shiftHighlightOptions();	
+		}
+	}
 }
 function downloadKml(url){
 	var xmlhttp = new XMLHttpRequest();
 	xmlhttp.onreadystatechange = function() {
 	if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+		//alert("downloaded");
 		kmlXML =xmlhttp.responseXML;
-		alert("downloaded");
 		}
 	}
 	xmlhttp.open("GET", url, false);
 	xmlhttp.send();
 }
 function test(){
-   if(geoON){
-	   	testColour(geoxml3Parser.docs[0].placemarks[0]);
-		geoxml3Parser.hideDocument(geoxml3Parser.docs[0]);
-   }else{
-	   geoxml3Parser.showDocument(geoxml3Parser.docs[0]);
-   }
-   geoON= !geoON;
+	if(geoON){
+		for(var i=kmlStrings.length-1;i>-1;i--){
+			geoxml3Parser.hideDocument(geoxml3Parser.docs[i]);
+	   }
+	}else{
+		for(var i=kmlStrings.length-1;i>-1;i--){
+			testColour(i);
+			geoxml3Parser.showDocument(geoxml3Parser.docs[i]);
+		}
+	}
+	geoON=!geoON;
 }
 google.maps.event.addDomListener(window, 'load', setUpMap);
 </script>
