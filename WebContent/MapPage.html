@@ -14,7 +14,7 @@
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 <script type="text/javascript">
 var shapeIndicies=[];//array of Polygons index arrays
-var jsonStrings =["caerdydd-cardiff","caerffili-caerphilly","farnham-bourne-ward", "surrey-heath-district-b-","guildford-district-b-","reading-b-","rushmoor-district-b-","east-hampshire-district","epsom-and-ewell-district-b-","hammersmith-and-fulham-london-boro","harrow-london-boro","merton-london-boro","islington-london-boro","kensington-and-chelsea-london-boro","barking-and-dagenham-london-boro","tower-hamlets-london-boro","windsor-and-maidenhead-b-","waltham-forest-london-boro","wandsworth-london-boro","city-and-county-of-the-city-of-london","barnet-london-boro","enfield-london-boro","greenwich-london-boro","hackney-london-boro","haringey-london-boro","hillingdon-london-boro","southwark-london-boro","boston-district-b-"];
+var jsonStrings =["city-of-wolverhampton-district-b-","epping-forest-district","sefton-district-b-","wychavon-district","york-b-","dundee-city","eden-district","caerffili-caerphilly","farnham-bourne-ward", "surrey-heath-district-b-","guildford-district-b-","reading-b-","rushmoor-district-b-","east-hampshire-district","epsom-and-ewell-district-b-","hammersmith-and-fulham-london-boro","harrow-london-boro","merton-london-boro","islington-london-boro","kensington-and-chelsea-london-boro","barking-and-dagenham-london-boro","tower-hamlets-london-boro","glasgow-city","windsor-and-maidenhead-b-","waltham-forest-london-boro","wandsworth-london-boro","city-and-county-of-the-city-of-london","barnet-london-boro","enfield-london-boro","greenwich-london-boro","hackney-london-boro","haringey-london-boro","hillingdon-london-boro","southwark-london-boro","boston-district-b-"];
 var map;
 var indicies;
 var shapes=[];
@@ -42,20 +42,21 @@ function downloadShape(url){
 function setUpShape(jsonData){//Name actually a lie, as once made, a shape's colour is fixed. Could, however, be made to create a shapeOptions that totally defines a shape instead
 	var points = jsonData.geometry.coordinates[0];
 	//alert(points.length);
-	indicies = [];
 	shown=false;
 	for(i=0;i<points.length;i++){
-		indicies[i]= new google.maps.LatLng(points[i][1],points[i][0]);//may need to swap order
+		indicies[indicies.length]= new google.maps.LatLng(points[i][1],points[i][0]);//may need to swap order
 	}
-	shapeIndicies[shapeIndicies.length] = indicies;
+	//shapeIndicies[shapeIndicies.length] = indicies;
 }
 function setUpShapes(){
 	shapes=[];
+	indicies = [];
 	fillColor = colors[colors.length-2];
 	strokeColor = colors[colors.length-1];
 	for(var i=0;i<jsonStrings.length;i++){
 		downloadShape("https://sturents.com/geo/"+jsonStrings[i]+".json");
 	}
+	shapeIndicies[shapeIndicies.length] = indicies
 
 }
 function test(){
@@ -68,7 +69,7 @@ function test(){
    }else{//shapes created here so can set colour
 	   for(i=0;i<shapeIndicies.length;i++){
 		   shapes[i] = new google.maps.Polygon({
-				 paths: shapeIndicies[i],
+				 paths: indicies,
 				 strokeColor: strokeColor,
 				 strokeOpacity: 0.8,
 				 strokeWeight: 3,
