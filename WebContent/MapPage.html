@@ -10,17 +10,15 @@
         padding: 0px
       }
     </style>
-<!-- Polygon drawing javascript based on example at https://developers.google.com/maps/documentation/javascript/examples/polygon-arrays
-	Setup to get data from form based on http://www.quirksmode.org/js/formex.html -->
 <!-- Google maps javascript API -->
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 <script type="text/javascript">
-var shapes;//array of Polygons -> might want to make into list
+var shapeIndicies=[];//array of Polygons index arrays
+var jsonStrings =["caerdydd-cardiff","caerffili-caerphilly","farnham-bourne-ward", "surrey-heath-district-b-","guildford-district-b-","reading-b-","rushmoor-district-b-","east-hampshire-district","epsom-and-ewell-district-b-","hammersmith-and-fulham-london-boro","harrow-london-boro","merton-london-boro","islington-london-boro","kensington-and-chelsea-london-boro","barking-and-dagenham-london-boro","tower-hamlets-london-boro","windsor-and-maidenhead-b-","waltham-forest-london-boro","wandsworth-london-boro","city-and-county-of-the-city-of-london","barnet-london-boro","enfield-london-boro","greenwich-london-boro","hackney-london-boro","haringey-london-boro","hillingdon-london-boro","southwark-london-boro","boston-district-b-"];
 var map;
-var shapeOldIndicies;
-var shapeOld;
-var shapeOldColour = [1,1,1];
-var checkedBools;
+var indicies;
+var shapes=[];
+var shown;
    
 function setUpMap(){
 	var mapOptions = {
@@ -43,147 +41,58 @@ function downloadShape(url){
 }
 function setUpShape(jsonData){//Name actually a lie, as once made, a shape's colour is fixed. Could, however, be made to create a shapeOptions that totally defines a shape instead
 	var points = jsonData.geometry.coordinates[0];
-	alert(points.length);
-	shapeOldIndicies = [];
+	//alert(points.length);
+	indicies = [];
+	shown=false;
 	for(i=0;i<points.length;i++){
-		shapeOldIndicies[i]= new google.maps.LatLng(points[i][1],points[i][0]);//may need to swap order
+		indicies[i]= new google.maps.LatLng(points[i][1],points[i][0]);//may need to swap order
 	}
+	shapeIndicies[shapeIndicies.length] = indicies;
 }
 function setUpShapes(){
-	//first the original shape
-	downloadShape("https://sturents.com/geo/guildford-district-b-.json");
-	//now the shape array
-	shapes = new Array(4);
-	checkedBools = new Array(4);
-	var shape;
-	var shapeIndicies = [
-	new google.maps.LatLng(51.2, -0.8),
-	new google.maps.LatLng(51.15, -0.85),
-	new google.maps.LatLng(51.25, -0.85),
-	];
-	shape = new google.maps.Polygon({
-	paths: shapeIndicies,
-	strokeColor: '#FF0000',
-	strokeOpacity: 0.8,
-	strokeWeight: 3,
-	});
-	shapes[0]=shape;
-	checkedBools[0]=false;
-	shapeIndicies = [
-	new google.maps.LatLng(51.2, -0.8),
-	new google.maps.LatLng(51.25, -0.85),
-	new google.maps.LatLng(51.25, -0.75),
-	];
-	shape = new google.maps.Polygon({
-	paths: shapeIndicies,
-	strokeColor: '#00FF00',
-	strokeOpacity: 0.8,
-	strokeWeight: 3,
-	});
-	shapes[1]=shape;
-	checkedBools[1]=false;
-	shapeIndicies = [
-	new google.maps.LatLng(51.2, -0.8),
-	new google.maps.LatLng(51.25, -0.75),
-	new google.maps.LatLng(51.15, -0.75),
-	];
-	shape = new google.maps.Polygon({
-	paths: shapeIndicies,
-	strokeColor: '#0000FF',
-	strokeOpacity: 0.8,
-	strokeWeight: 3,
-	});
-	shapes[2]=shape;
-	checkedBools[2]=false;
-	shapeIndicies = [
-	new google.maps.LatLng(51.2, -0.8),
-	new google.maps.LatLng(51.15, -0.75),
-	new google.maps.LatLng(51.15, -0.85),
-	];
-	shape = new google.maps.Polygon({
-	paths: shapeIndicies,
-	strokeColor: '#FFFFFF',
-	strokeOpacity: 0.8,
-	strokeWeight: 3,
-	});
-	shapes[3]=shape;
-	checkedBools[3]=false;
+	shapes=[];
+	fillColor = colors[colors.length-2];
+	strokeColor = colors[colors.length-1];
+	for(var i=0;i<jsonStrings.length;i++){
+		downloadShape("https://sturents.com/geo/"+jsonStrings[i]+".json");
+	}
+
 }
 function test(){
-   if(shapeOld!=null){
-	   shift(shapeOldColour );
-	   shapeOld.setMap(null);
-	   shapeOld=null;
-   }else{//shape created here so can set colour
-	   shapeOld = new google.maps.Polygon({
-			 paths: shapeOldIndicies,
-			 strokeColor: hexify(shapeOldColour ),
-			 strokeOpacity: 0.8,
-			 strokeWeight: 3,
-			 });
-	   shapeOld.setMap(map);
+   if(shown==true){
+	   for(i=0;i<shapes.length;i++){
+			shapes[i].setMap(null);
+			shapes[i]=null;
+	   }
+	   shapes=[];
+   }else{//shapes created here so can set colour
+	   for(i=0;i<shapeIndicies.length;i++){
+		   shapes[i] = new google.maps.Polygon({
+				 paths: shapeIndicies[i],
+				 strokeColor: strokeColor,
+				 strokeOpacity: 0.8,
+				 strokeWeight: 3,
+				 fill: 0.5,
+				 fillColor: fillColor
+				 });
+		   shapes[i].setMap(map);
+		   shiftHighlightOptions();
+	   }
    }
+   shown=!shown;
 }
-//change the colour
-function shift (arr){
-	for(i=0;i<arr.length;i++){
-		arr[i]=2*arr[i];
-		if(arr[i]>256){
-			arr[i]=1;
-		}
+var col=0;
+var colors = ["#000000","#ff0000","#00ff00","#ffff00","#0000ff","#ff00ff","#00ffff","#ffffff","#8f0000","#008f00","#8f8f00","#00008f","#8f008f","#008f8f","#8f8f8f"];
+var fillColor;
+var strokeColor;
+//causes the fill/strokeColor to iterate through various colours
+function shiftHighlightOptions(){
+	fillColor =strokeColor;
+	strokeColor = colors[col];
+	col++;
+	if(col==colors.length){
+		col=0;
 	}
-}
-//convert rgb value to hex 
-function hexify(arr){
-	var str="#";
-	for(i=0;i<arr.length;i++){
-		if((arr[i]<=256)&(arr[i]>0)){
-			var sec = (arr[i]-1)%16;
-			var fir = ((arr[i]-1)-sec)/16;
-			str+=(hexInt(fir)+hexInt(sec));
-		}else{
-			str+="00";
-		}
-	}
-	return str;
-}
-//See above method
-function hexInt(i){
-	var str;
-	if((i>0)&(i<10)){
-		str=i.toString();
-	}else{
-		switch (i)
-		{
-	  	case 10: str="a";
-     		 break;
-	  	case 11: str="b";
-      		break;
-      	case 12: str="c";
-			 break;
-      	case 13: str="d";
-     		 break;
-		case 14: str="e";
-		 	break;
-		case 15: str="f";
-   			 break;
-	  	default: str="0";
-		}		
-	}
-	return str;
-}
-function toggleShapes(){
-	for (i=0;i<4;i++) {
-		if(document.checkboxForm.elements[i].checked!=checkedBools[i]){
-			if(checkedBools[i]){
-				shapes[i].setMap(null);
-			}else{
-				shapes[i].setMap(map);
-	   		}
-			checkedBools[i]=!checkedBools[i];
-		}
-	}
-	
 }
 
 google.maps.event.addDomListener(window, 'load', setUpMap);
@@ -193,21 +102,7 @@ google.maps.event.addDomListener(window, 'load', setUpMap);
 <p>
 Map will go below when put in.
 </p>
-<!-- below  was generated by opening google maps (site), clicking settings (cog), choosing share or embed, and selecting embed. See https://support.google.com/maps/answer/3544418?hl=en&ref_topic=3093585 for details 
-Is however just a window with google maps in, so is a dead end for job at hand 
-<iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d19993.75565463862!2d-0.7887868872713436!3d51.21503279683898!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2suk!4v1413062421529" width="600" height="450" style="border:0"></iframe>
-Instead set up in javascript - see head
--->
 <div id="mapArea"></div>
-<form name="checkboxForm" action="#" method="get">
-<!-- have checkboxes for n shapes, first fixed n, then try and make n variable -->
-<input type="checkbox" name="shape0Checked">Shape 0
-<input type="checkbox" name="shape1Checked">Shape 1
-<input type="checkbox" name="shape2Checked">Shape 2
-<input type="checkbox" name="shape3Checked">Shape 3
-<input type="button" name="refresh" value="Update map" onclick="toggleShapes(); return false"/>
-
-</form>
 <input type="button" onclick="test()" value="No, click ME" />
 </body>
 </html>
