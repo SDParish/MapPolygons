@@ -10,15 +10,16 @@
         padding: 0px
       }
     </style>
-<!-- Polygon drawing javascript based on example at https://developers.google.com/maps/documentation/javascript/examples/polygon-arrays -->
 <!-- Google maps javascript API -->
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 <script type="text/javascript">
+var shapeIndicies=[];//array of Polygons index arrays
+var kmlStrings =["caerdydd-cardiff","caerffili-caerphilly","farnham-bourne-ward", "surrey-heath-district-b-","guildford-district-b-","reading-b-","rushmoor-district-b-","east-hampshire-district","epsom-and-ewell-district-b-","hammersmith-and-fulham-london-boro","harrow-london-boro","merton-london-boro","islington-london-boro","kensington-and-chelsea-london-boro","barking-and-dagenham-london-boro","tower-hamlets-london-boro","windsor-and-maidenhead-b-","waltham-forest-london-boro","wandsworth-london-boro","city-and-county-of-the-city-of-london","barnet-london-boro","enfield-london-boro","greenwich-london-boro","hackney-london-boro","haringey-london-boro","hillingdon-london-boro","southwark-london-boro","boston-district-b-"];
 var map;
-var shapeOldIndicies;
-var shapeOld;
-var shapeOldColour = [1,1,1];
-   
+var indicies;
+var shapes=[];
+var shown;
+
 function setUpMap(){
 	var mapOptions = {
 		     zoom: 9,
@@ -32,90 +33,68 @@ function downloadShape(url){
 	xmlhttp.onreadystatechange = function() {
 	if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 		setUpShape(xmlhttp.responseXML);
-		alert("downloaded");
 		}
 	}
 	xmlhttp.open("GET", url, false);
 	xmlhttp.send();
 }
 function setUpShapes(){
-	downloadShape("https://sturents.com/geo/farnham-bourne-ward.kml");
+	shapes=[];
+	fillColor = colors[colors.length-2];
+	strokeColor = colors[colors.length-1];
+	for(var i=0;i<kmlStrings.length;i++){
+		downloadShape("https://sturents.com/geo/"+kmlStrings[i]+".kml");
+	}
+	shown=false;
 }
 function setUpShape(kmlData){//Name actually a lie, as once made, a shape's colour is fixed. Could, however, be made to create a shapeOptions that totally defines a shape instead
 	var pointsString = kmlData.getElementsByTagName("Polygon")[0].getElementsByTagName("outerBoundaryIs")[0].getElementsByTagName("LinearRing")[0].getElementsByTagName("coordinates")[0].childNodes[0].nodeValue;
 	var points = pointsString.split('\n');//points[2n] = "". still need to split at ','
-	shapeOldIndicies = [];
+	indicies = [];
 	var arr;
 	for(i=1;i<points.length;i=i+2){
 		arr = points[i].split(',');
-		shapeOldIndicies[(i-1)/2]= new google.maps.LatLng(arr[1],arr[0]);
+		indicies[(i-1)/2]= new google.maps.LatLng(arr[1],arr[0]);
 	}
+	shapeIndicies[shapeIndicies.length] = indicies;
 }
 
 function test(){
-   if(shapeOld!=null){
-	   shift(shapeOldColour );
-	   shapeOld.setMap(null);
-	   shapeOld=null;
-   }else{//shape created here so can set colour
-	   shapeOld = new google.maps.Polygon({
-			 paths: shapeOldIndicies,
-			 strokeColor: hexify(shapeOldColour ),
-			 strokeOpacity: 0.8,
-			 strokeWeight: 3,
-			 });
-	   shapeOld.setMap(map);
-   }
+	if(shown==true){
+		for(i=0;i<shapes.length;i++){
+			shapes[i].setMap(null);
+			shapes[i]=null;
+		  }
+		  shapes=[];
+	  }else{//shapes created here so can set colour
+		  for(i=0;i<shapeIndicies.length;i++){
+			  shapes[i] = new google.maps.Polygon({
+				paths: shapeIndicies[i],
+				strokeColor: strokeColor,
+				strokeOpacity: 0.8,
+				strokeWeight: 3,
+				fill: 0.5,
+				fillColor: fillColor
+				});
+			 	shapes[i].setMap(map);
+			   shiftHighlightOptions();
+		   }
+	  }
+	  shown=!shown;
 }
-//change the colour
-function shift (arr){
-	for(i=0;i<arr.length;i++){
-		arr[i]=2*arr[i];
-		if(arr[i]>256){
-			arr[i]=1;
-		}
+var col=0;
+var colors = ["#000000","#ff0000","#00ff00","#ffff00","#0000ff","#ff00ff","#00ffff","#ffffff","#8f0000","#008f00","#8f8f00","#00008f","#8f008f","#008f8f","#8f8f8f"];
+var fillColor;
+var strokeColor;
+//causes the fill/strokeColor to iterate through various colours
+function shiftHighlightOptions(){
+	fillColor =strokeColor;
+	strokeColor = colors[col];
+	col++;
+	if(col==colors.length){
+		col=0;
 	}
 }
-//convert rgb value to hex 
-function hexify(arr){
-	var str="#";
-	for(i=0;i<arr.length;i++){
-		if((arr[i]<=256)&(arr[i]>0)){
-			var sec = (arr[i]-1)%16;
-			var fir = ((arr[i]-1)-sec)/16;
-			str+=(hexInt(fir)+hexInt(sec));
-		}else{
-			str+="00";
-		}
-	}
-	return str;
-}
-//See above method
-function hexInt(i){
-	var str;
-	if((i>0)&(i<10)){
-		str=i.toString();
-	}else{
-		switch (i)
-		{
-	  	case 10: str="a";
-     		 break;
-	  	case 11: str="b";
-      		break;
-      	case 12: str="c";
-			 break;
-      	case 13: str="d";
-     		 break;
-		case 14: str="e";
-		 	break;
-		case 15: str="f";
-   			 break;
-	  	default: str="0";
-		}		
-	}
-	return str;
-}
-
 google.maps.event.addDomListener(window, 'load', setUpMap);
 </script>
 </head>
