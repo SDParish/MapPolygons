@@ -42,26 +42,52 @@ function setKmlColourSimple($url, $colour="ffe89e40"){
     }
     return $xml;
 }
+//make sure colour String exists and is valid, and replace it with default otherwise
+//could extend to alphaless colour
+function enforceColourForm(&$colour){//colour in form aabbggrr
+    $valid =TRUE;
+    if($colour===null){
+       $valid=FALSE;
+    }elseif(strlen($colour) !=8){//if length != 8 invalid
+         $valid=FALSE;
+    }else{//check all in range 0-f
+        $i=0;
+        $colourArray= str_split(strtolower($colour));
+        while(($valid)&&($i<8)){
+            //if the single character string is a substring of "0123456789abcdef", then it is a valid part of a colour
+            $valid =(strpos("0123456789abcdef",$colourArray[$i])!==FALSE);
+            $i++;
+        }
+    }
+    if(!($valid)){
+        $colour="ffe89e40";
+    }
+}
 /*
 name kml, child([0])=place, childchild[1]=style (0=name,2=multigeom), child^3([0])=PolyStyle, child^4[0]=color
 */
-
-        $dummy = setKmlColourSimple("farnham-bourne-ward.kml","ffffffff");
-        print_r($dummy);
-        echo "============\n";
-       $dummy = setKmlColourSimple("temp.kml","ff000000");
-        print_r($dummy);
-       //header("Content-Type: text/plain");
-       //$dummy->saveXML(/*"temp.kml"*/);
-      // $dummy->
-      //header("Content-disposition: attachment; filename=farnham-bourne-ward.kml");
-//header("Content-type: application/xml");
-      //readfile("temp.kml");
-      //unlink("temp.kml");
-       echo "============\n";
-        $dummy2 = setKmlColourDOM("farnham-bourne-ward.kml","ff00ff00");
-       print $dummy2->saveXML();
-       echo "============\n";
-       $dummy2 = setKmlColourDOM("temp.kml","ff0000ff");
-       print $dummy2->saveXML();
+    //below causes single access from address bar to trigger download as desired, but acts as null when read by MapPage.html 
+    //will assume page provides full link in form: filename.php?url=urlString&col=colourString
+        //assume urlstring is full http//www...../name.kml
+        $urlString = htmlspecialchars($_GET["url"]);
+        $colourString = htmlspecialchars($_GET["col"]);
+        if($colourString==null){
+             $dummy = setKmlColourSimple($urlString); 
+           // $dummy2 = setKmlColourDOM($urlString);
+        }else{
+            enforceColourForm($colourString);
+            $dummy = setKmlColourSimple($urlString,$colourString); 
+            //$dummy2 = setKmlColourDOM($urlString,$colourString);
+        }
+        //output as kml file, first trim $urlString to just the file name
+        $handle = strrchr($urlString, "/");
+        if($handle===FALSE){//no path - i.e. all we were given is the name
+            $handle = $urlString;
+        }else{//have removed path, now drop the "/"
+            $handle = substr($handle,1);
+        }
+         header("Content-disposition: attachment; filename=".$handle);
+         header("Content-type: application/kml");
+        print $dummy->saveXML();
+        //print $dummy2->saveXML();
 ?>

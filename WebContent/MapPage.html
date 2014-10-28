@@ -10,97 +10,89 @@
         padding: 0px
       }
     </style>
-<!-- Polygon drawing javascript based on example at https://developers.google.com/maps/documentation/javascript/examples/polygon-arrays
-	Setup to get data from form based on http://www.quirksmode.org/js/formex.html -->
 <!-- Google maps javascript API -->
 <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
 <script type="text/javascript">
-//Consider storing kml permalinks in url i.e MapPage/guildford+guildford-district-b-+reading-b-
-var kmls;
-var map;
-var kmlLayerTest;
-var kmlXML;
+    //Consider storing kml permalinks in url i.e MapPage/guildford+guildford-district-b-+reading-b-
+    var kmls;
+    var map;
+    var kmlLayerTest;
+    var kmlXML;
 
-function setUpMap() {
-    var mapOptions = {
-        zoom: 9,
-        center: new google.maps.LatLng(51.2, -0.8)
-    };
-    map = new google.maps.Map(document.getElementById('mapArea'), mapOptions);
-    setUpKmlArray();
-    setUpKML();
-}
-function setUpKML() {
-   // downloadKml("kmlColourSetter.php");
-    //alert(kmlXML.toString());
-    //get the first (only) Style tag's first (only) PolyStyle tag's first (only) color tag's first (only) child's value
-    //alert(kmlXML.getElementsByTagName("Style")[0].getElementsByTagName("PolyStyle")[0].getElementsByTagName("color")[0].childNodes[0].nodeValue);
-    //kmlXML.getElementsByTagName("Style")[0].getElementsByTagName("PolyStyle")[0].getElementsByTagName("color")[0].childNodes[0].nodeValue='ffffffff';
-    //alert(kmlXML.getElementsByTagName("Style")[0].getElementsByTagName("PolyStyle")[0].getElementsByTagName("color")[0].childNodes[0].nodeValue);
-   //above 3 lines show color, change color, and show color (which is the new value.)
-    kmlLayerTest = new google.maps.KmlLayer();
-    //so far unable pass document on and have it work
-    kmlLayerTest.setUrl("http://178.62.107.109/testUpload/temp3.kml");
-    alert("done");
-}
-function downloadKml(url) {
-    var xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function () {
-        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-            kmlXML = xmlhttp.responseXML;
-            alert("downloaded");
+    function setUpMap() {
+        var mapOptions = {
+            zoom: 9,
+            center: new google.maps.LatLng(51.2, -0.8)
+        };
+        map = new google.maps.Map(document.getElementById('mapArea'), mapOptions);
+        alert("boo");
+        setUpKmlArray();
+        setUpKML();
+    }
+    function setUpKML() {
+         downloadKml("kmlColourSetter.php?url=https://sturents.com/geo/greenwich-london-boro.kml&col=ffff00ff");
+         //getting null error here
+         alert(kmlXML.toString());
+        //get the first (only) Style tag's first (only) LineStyle tag's first (only) color tag's first (only) child's value
+         alert(kmlXML.getElementsByTagName("Style")[0].getElementsByTagName("LineStyle")[0].getElementsByTagName("color")[0].childNodes[0].nodeValue);
+        kmlLayerTest = new google.maps.KmlLayer();
+        //so far unable pass document on and have it work
+        kmlLayerTest.setUrl("kmlColourSetter.php?url=https://sturents.com/geo/greenwich-london-boro.kml&col=ffff00ff");
+        alert("done");
+    }
+    function downloadKml(url) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                kmlXML = xmlhttp.responseXML;
+                alert("downloaded");
+            }
         }
+        xmlhttp.open("GET", url, false);
+        xmlhttp.send();
     }
-    xmlhttp.open("GET", url, false);
-    xmlhttp.send();
-}
-function setUpKmlArray() {//reading-b-, kingston-upon-thames-london-boro, guildford-district-b-, guildford, surrey-county, surrey
-    kmls = new Array(6);
-    kmls[0] = new google.maps.KmlLayer();
-    kmls[0].setUrl("https://sturents.com/geo/reading-b-.kml");
-    kmls[1] = new google.maps.KmlLayer();
-    kmls[1].setUrl("https://sturents.com/geo/kingston-upon-thames-london-boro.kml");
-    kmls[2] = new google.maps.KmlLayer();
-    kmls[2].setUrl("https://sturents.com/geo/guildford-district-b-.kml");
-    kmls[3] = new google.maps.KmlLayer();
-    kmls[3].setUrl("http://178.62.107.109/testUpload/guildford.kml");
-    kmls[4] = new google.maps.KmlLayer();
-    kmls[4].setUrl("https://sturents.com/geo/surrey-county.kml");
-    kmls[5] = new google.maps.KmlLayer();
-    kmls[5].setUrl("http://178.62.107.109/testUpload/tempA.kml");
-}
-function test() {
-    if (kmlLayerTest.getMap() == map) {
-        alert("was map");
-        kmlLayerTest.setMap(null);
-    } else {
-        alert("was null");
-        kmlLayerTest.setMap(map);
+    function setUpKmlArray() {//reading-b-, kingston-upon-thames-london-boro, guildford-district-b-, guildford, surrey-county, surrey
+        kmls = new Array(6);
+        kmls[0] = new google.maps.KmlLayer();
+        kmls[0].setUrl("https://sturents.com/geo/reading-b-.kml");
+        kmls[1] = new google.maps.KmlLayer();
+        kmls[1].setUrl("https://sturents.com/geo/kingston-upon-thames-london-boro.kml");
+        kmls[2] = new google.maps.KmlLayer();
+        kmls[2].setUrl("https://sturents.com/geo/guildford-district-b-.kml");
+        kmls[3] = new google.maps.KmlLayer();
+        kmls[3].setUrl("http://178.62.107.109/testUpload/guildford.kml");
+        kmls[4] = new google.maps.KmlLayer();
+        kmls[4].setUrl("https://sturents.com/geo/surrey-county.kml");
+        kmls[5] = new google.maps.KmlLayer();
+        kmls[5].setUrl("https://sturents.com/geo/surrey.kml");
     }
-}
-//for large numbers of kmls, might want different method - this re-sets the kmls each time
-function toggleKmls() {
-    //maybe add code to stop screen jumping to location of last kml that is checked
-    for (i = 0; i < 6; i++) {
-        if (document.checkboxForm.elements[i].checked) {
-            kmls[i].setMap(map);
+    function test() {
+        if (kmlLayerTest.getMap() == map) {
+            alert("was map");
+            kmlLayerTest.setMap(null);
         } else {
-            kmls[i].setMap(null);
+            alert("was null");
+            kmlLayerTest.setMap(map);
         }
     }
-}
-google.maps.event.addDomListener(window, 'load', setUpMap);
+    //for large numbers of kmls, might want different method - this re-sets the kmls each time
+    function toggleKmls() {
+        //maybe add code to stop screen jumping to location of last kml that is checked
+        for (i = 0; i < 6; i++) {
+            if (document.checkboxForm.elements[i].checked) {
+                kmls[i].setMap(map);
+            } else {
+                kmls[i].setMap(null);
+            }
+        }
+    }
+    google.maps.event.addDomListener(window, 'load', setUpMap);
 </script>
 </head>
 <body>
 <p>
 Map will go below when put in.
 </p>
-<!-- below  was generated by opening google maps (site), clicking settings (cog), choosing share or embed, and selecting embed. See https://support.google.com/maps/answer/3544418?hl=en&ref_topic=3093585 for details 
-Is however just a window with google maps in, so is a dead end for job at hand 
-<iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d19993.75565463862!2d-0.7887868872713436!3d51.21503279683898!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2suk!4v1413062421529" width="600" height="450" style="border:0"></iframe>
-Instead set up in javascript - see head
--->
 <div id="mapArea"></div>
 <form name="checkboxForm" action="#" method="get">
 <!-- //reading-b-, reading, guildford-district-b-, guildford, surrey-county, surrey -->
@@ -114,6 +106,5 @@ Instead set up in javascript - see head
 
 </form>
 <input type="button" onclick="test()" value="No, click ME" />
-<!-- copied from sturents <div class="gmap" data-kml="C:\Users\Stephen\Downloads\oxford.kml"></div> -->
 </body>
 </html>
