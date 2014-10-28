@@ -1,7 +1,7 @@
 <?php
     //both methods now set for editting/creating LineStyles. NB I assume there is only one LineStyle per kml
 //takes the kml file at the given url, and sets its colour to the given colour, and returns the new kml file using XML DOM
-function setKmlColourDOM($url, $colour="ffe89e40"){
+function setKmlColourDOM($url, $colour="ffff0000"){
 	$xmlDoc = new DOMDocument();
 	$xmlDoc->load($url);
 	//now access color field, and set to $colour
@@ -21,7 +21,7 @@ function setKmlColourDOM($url, $colour="ffe89e40"){
      return $xmlDoc;
 }
 //takes the kml file at the given url, and sets its colour to the given colour, and returns the new kml file using SimpleXML
-function setKmlColourSimple($url, $colour="ffe89e40"){
+function setKmlColourSimple($url, $colour="ff00ff00"){
 	$xml=simplexml_load_file($url);
 	//now access color field, and set to $colour
 	$style =$xml->Placemark->Style;
@@ -60,13 +60,15 @@ function enforceColourForm(&$colour){//colour in form aabbggrr
         }
     }
     if(!($valid)){
-        $colour="ffe89e40";
+        $colour="ff0000ff";
     }
 }
 /*
 name kml, child([0])=place, childchild[1]=style (0=name,2=multigeom), child^3([0])=PolyStyle, child^4[0]=color
 */
-    //below causes single access from address bar to trigger download as desired, but acts as null when read by MapPage.html 
+    //below causes single access from address bar to trigger download as desired, but fails to work for KmlLayer - INVALID_REQUEST is thrown
+    //However note that google can render it -> see https://maps.google.com/maps?q=http://178.62.107.109/testUpload/kmlColourSetter.php?url%3Dhttps://sturents.com/geo/greenwich-london-boro.kml&col=ffff00ff%22&output=classic&dg=feature
+    // https://maps.google.com/maps?q= can be fed any accessible kml to see if it works.    
     //will assume page provides full link in form: filename.php?url=urlString&col=colourString
         //assume urlstring is full http//www...../name.kml
         $urlString = htmlspecialchars($_GET["url"]);
@@ -86,8 +88,10 @@ name kml, child([0])=place, childchild[1]=style (0=name,2=multigeom), child^3([0
         }else{//have removed path, now drop the "/"
             $handle = substr($handle,1);
         }
+        //set to be a download, with the given url's name as the new file name
          header("Content-disposition: attachment; filename=".$handle);
-         header("Content-type: application/kml");
+         //Set file type to kml properly
+         header('Content-type: application/vnd.google-earth.kml+xml');
         print $dummy->saveXML();
         //print $dummy2->saveXML();
 ?>

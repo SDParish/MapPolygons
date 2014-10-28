@@ -36,7 +36,9 @@
         //get the first (only) Style tag's first (only) LineStyle tag's first (only) color tag's first (only) child's value
          alert(kmlXML.getElementsByTagName("Style")[0].getElementsByTagName("LineStyle")[0].getElementsByTagName("color")[0].childNodes[0].nodeValue);
         kmlLayerTest = new google.maps.KmlLayer();
-        //so far unable pass document on and have it work
+        //so far unable pass document on and have it work - INVALID_REQUEST is thrown by KmlLayer
+        //note that google can render the result of the php file -> see https://maps.google.com/maps?q=http://178.62.107.109/testUpload/kmlColourSetter.php?url%3Dhttps://sturents.com/geo/greenwich-london-boro.kml&col=ffff00ff%22&output=classic&dg=feature
+        // https://maps.google.com/maps?q= can be fed any accessible kml to see if it works.
         kmlLayerTest.setUrl("kmlColourSetter.php?url=https://sturents.com/geo/greenwich-london-boro.kml&col=ffff00ff");
         alert("done");
     }
@@ -74,6 +76,7 @@
             alert("was null");
             kmlLayerTest.setMap(map);
         }
+       // google.maps.event.addListenerOnce(kmlLayerTest, 'status_changed', alert(kmlLayerTest.getStatus()));
     }
     //for large numbers of kmls, might want different method - this re-sets the kmls each time
     function toggleKmls() {
