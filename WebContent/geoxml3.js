@@ -19,11 +19,6 @@
    limitations under the License.
 
 */
-/* SDP
- * Added:
- * styles[styleID].color = nodeValue(styleNodes[0].getElementsByTagName('color')[0],defaultStyle.color);
- * at line 254, so that an imported kml polygon uses its defined colour for its edge
- */
 /**
  * A MultiGeometry object that will allow multiple polylines in a MultiGeometry
  * containing LineStrings to be treated as a single object
@@ -256,8 +251,7 @@ function processStyle(thisNode, styles, styleID) {
         styles[styleID].outline   = getBooleanValue(styleNodes[0].getElementsByTagName('outline')[0],defaultStyle.outline);
         styles[styleID].fill      = getBooleanValue(styleNodes[0].getElementsByTagName('fill')[0],defaultStyle.fill);
         styles[styleID].colorMode = nodeValue(styleNodes[0].getElementsByTagName('colorMode')[0], defaultStyle.colorMode);
-        styles[styleID].color = nodeValue(styleNodes[0].getElementsByTagName('color')[0],defaultStyle.color);
-        styles[styleID].fillcolor = nodeValue(styleNodes[0].getElementsByTagName('color')[0],defaultStyle.fillcolor);
+       styles[styleID].fillcolor = nodeValue(styleNodes[0].getElementsByTagName('color')[0],defaultStyle.fillcolor);
       }
       return styles[styleID];
 }
