@@ -1,12 +1,3 @@
-<!DOCTYPE html>
-<html lang=\"en\">
-    <head>
-        <meta charset=\"utf-8\" />
-        <title>Some page</title>
-   </head>
-    <body>
-        <p>dummy</p>
-        <p>
 <?php
 //takes the kml file at the given url, and sets its colour to the given colour, and returns the new kml file using XML DOM
 function setKmlColourDOM($url, $colour="ffe89e40"){
@@ -28,16 +19,18 @@ function setKmlColourSimple($url, $colour="ffe89e40"){
 name kml, child([0])=place, childchild[1]=style (0=name,2=multigeom), child^3([0])=PolyStyle, child^4[0]=color
 */
 
-        $dummy = setKmlColourSimple("farnham-bourne-ward.kml");
+        $dummy = setKmlColourSimple("guildford.kml","ffffffff");
        // print_r($dummy);
-         print $dummy->saveXML();
-       echo "</p><p>dummy2</p><p>";
-        $dummy2 = setKmlColourDOM("farnham-bourne-ward.kml");
-        print $dummy2->getElementsByTagName("color")->item(0)->nodeValue;  
-        print "<br/>";  
-        print $dummy2->saveXML();
-        echo "<br/> end";
+       //below line worked on localhost, not on remote server -> probably write permissions
+        if( $dummy->saveXML("temp.kml")){
+            echo "success";
+            header("Content-disposition: attachment; filename=farnham-bourne-ward.kml");
+            header("Content-type: application/kml");
+            readfile("temp.kml");
+        }else{
+            echo  $dummy->saveXML();
+        };
+      //unlink("temp.kml");
+       // $dummy2 = setKmlColourDOM("farnham-bourne-ward.kml");
+       //print $dummy2->saveXML();
 ?>
-</p>
-    </body>
-</html>
