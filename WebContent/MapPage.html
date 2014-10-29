@@ -59,6 +59,7 @@ function setUpFullKmlList(showAll){
 }
 //See if can set to be called by manual changes to the hash - will need to see if triggered by singleOn/Off
 //window.onhashchange triggered by page reload, but not by typing in url and clicking elsewhere, or by singleOn/Off
+//TODO edit to include colours (optional eg name&name2[coldata]&... ) not sure on scheme yet. Will need to store default colour string
 function setUpInitialKmls(){
 	//format is: ...MapPage.html#aaaaa&bbbbb&cccc...
 	//Note that a Google map can only display so many layers
@@ -84,7 +85,8 @@ function setUpInitialKmls(){
 }
 function addKml(urlname){//separate method so can also be called when url is changed
 	var newKml =new google.maps.KmlLayer();
-	newKml.setUrl("https://sturents.com/geo/"+urlname+".kml");
+	alert("http://178.62.107.109/testUpload/kmlColourSetter.php?url="+urlname+".kml&col="+document.colourForm.lineColour.value);
+	newKml.setUrl("http://178.62.107.109/testUpload/kmlColourSetter.php?url="+urlname+".kml&col="+document.colourForm.lineColour.value);
 	newKml.setMap(map);
 	singleKmls.splice(0,0,newKml);
 	singleKmlNames.splice(0,0,urlname);
@@ -130,6 +132,9 @@ google.maps.event.addDomListener(window, 'load', setUpMap);
 Map will go below when put in.
 </p>
 <div id="mapArea"></div>
+<form name="colourForm" action="#" method="get">
+Line colour: <input type="text" name="lineColour" value="ffe89e40" maxlength=8>
+</form>
 <!-- Div to hold a dynamically generated form from https://sturents.com/geo/show-all -->
 <div id="fullCheckboxDiv"></div>
 </body>
