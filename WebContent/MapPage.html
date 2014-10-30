@@ -97,8 +97,8 @@ function addKml(urlname, colourString){//separate method so can also be called w
 	if(colourString!=""){
 		colourString="&col="+colourString;
 	}
-	alert("http://178.62.107.109/testUpload/kmlColourSetter.php?url="+urlname+".kml"+colourString);
-	newKml.setUrl("http://178.62.107.109/testUpload/kmlColourSetter.php?url="+urlname+".kml"+colourString);
+	alert("http://178.62.107.109/testUpload/kmlColourSetter.php?url=https://sturents.com/geo/"+urlname+".kml"+colourString);
+	newKml.setUrl("http://178.62.107.109/testUpload/kmlColourSetter.php?url=https://sturents.com/geo/"+urlname+".kml"+colourString);
 	newKml.setMap(map);
 	singleKmls.splice(0,0,newKml);
 	singleKmlNames.splice(0,0,urlname);
