@@ -25,17 +25,7 @@ function setUpMap(){
 		     center: new google.maps.LatLng(51.2, -0.8)
 		  };
 	map = new google.maps.Map(document.getElementById('mapArea'),mapOptions);
-	downloadFullList();//This is partly asynchronous, so may not be complete before subsequent actions
-}
-function downloadFullList(){//NB show-all does not actually show all possible tags, and some shown tags seem not to work.
-	var xmlhttp = new XMLHttpRequest();
-	xmlhttp.onreadystatechange = function() {
-	if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-		setUpFullKmlList(JSON.parse(xmlhttp.responseText));
-	    }
-	}
-	xmlhttp.open("GET", "https://sturents.com/geo/show-all", true);
-	xmlhttp.send();
+	setUpFullKmlList(<?php echo file_get_contents("https://sturents.com/geo/show-all")?>);//This is partly asynchronous, so may not be complete before subsequent actions
 }
 function setUpFullKmlList(showAll){
 	fullForm = document.createElement("form");
