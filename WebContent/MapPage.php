@@ -85,7 +85,7 @@ function setUpInitialKmls(){
 function addKml(urlname, colourString){//separate method so can also be called when url is changed
 	var newKml =new google.maps.KmlLayer();
 	if(colourString!=""){
-		colourString="&col="+colourString;
+		colourString="&lcol="+colourString+"&wid=2&out=1";
 	}
 	newKml.setUrl("http://178.62.107.109/testUpload/kmlColourSetter.php?url=https://sturents.com/geo/"+urlname+".kml"+colourString);
 	newKml.setMap(map);
