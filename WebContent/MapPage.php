@@ -15,8 +15,8 @@
 <script type="text/javascript">
 var map;
 var fullForm;
-var singleKmls=[];//The KmlLayers created by the singleOn method, newest in [0], in age order
-var singleKmlNames=[];//The strings corresponding to the KmlLayers created by the singleOn method, newest in [0], in age order
+var kmls=[];//The KmlLayers created by the singleOn method, oldest in [0], in age order
+var kmlNames=[];//The strings corresponding to the KmlLayers created by the singleOn method, oldest in [0], in age order
 
 function setUpMap(){
 	alert("loading page");//used to show/prove page is not reloading
@@ -47,10 +47,8 @@ function setUpFullKmlList(showAll){
 	//below here to ensure that the form is set up when it runs
 	setUpInitialKmls();
 }
-//See if can set to be called by manual changes to the hash - will need to see if triggered by singleOn/Off
-//window.onhashchange triggered by page reload, but not by typing in url and clicking elsewhere, or by singleOn/Off
-function setUpInitialKmls(){
-	//format is: ...MapPage.html#aaaaa=col&bbbbb=col&cccc...
+function setUpInitialKmls(){//NB pop-up asking for js permission clears hash
+	//format is: ...MapPage.html#aaaaa:lcol:out:wid:fcol:fill&bbbbb:lcol:out:wid:fcol:fill&cccc... where lcol,out,wid,fcol,fill can be ""
 	//Note that a Google map can only display so many layers
 	var targets = new Array(0);
 	//Get an Array of all given locations
@@ -62,18 +60,11 @@ function setUpInitialKmls(){
 	//Add new kmls
 	for(i=0;i<targets.length;i++){
 		//split into kml name and colour (if exists)
-		splitTarget=targets[i].split("=");
+		splitTarget=targets[i].split(":");
 		//check not already shown
-		if(singleKmlNames.indexOf(splitTarget[0])==-1){
-			//if no colour, set as blank value
-			if(splitTarget.length==1){
-				colour="";
-			}else{
-				colour=splitTarget[1];
-			}
+		if(kmlNames.indexOf(splitTarget[0])==-1){
 			//check checkbox and add to map
-			//TODO extend to extract other data, once sorted out encoding
-			addKml(splitTarget[0],colour,"","","","");	
+			addKml(splitTarget);	
 			for(j=0;j<fullForm.elements.length;j++){
 				if(fullForm.elements[j].name==splitTarget[0]){
 					fullForm.elements[j].checked =!fullForm.elements[j].checked;
@@ -83,44 +74,44 @@ function setUpInitialKmls(){
 		}
 	}
 }
-function addKml(urlname, lcolourString, outString, widString, fcolourString, fillString){//separate method so can also be called when url is changed
+var colourSetterTags=["&lcol=","&out=","&wid=","&fcol=","&fill="];
+function addKml(dataArray){//urlname, lcolourString, outString, widString, fcolourString, fillString){//separate method so can also be called when url is changed
 	var newKml =new google.maps.KmlLayer();
-	if(lcolourString!=""){
-		lcolourString="&lcol="+lcolourString;
+	//have array of 'tags', map across it and dataArray[1 to end] to create request string
+	var head="http://178.62.107.109/testUpload/kmlColourSetter.php?url=https://sturents.com/geo/";
+	var tail=".kml";
+	for(var i=1;i<6;i++){
+		if(dataArray[i]!=""){
+			tail=tail+colourSetterTags[i-1]+dataArray[i];
+		}
 	}
-	if(fcolourString!=""){
-		fcolourString="&fcol="+fcolourString;
-	}
-	if(widString!=""){
-		widString="&wid="+widString;
-	}
-	//alert("http://178.62.107.109/testUpload/kmlColourSetter.php?url=https://sturents.com/geo/"+urlname+".kml"+lcolourString+outString+widString+fcolourString+fillString);
-	newKml.setUrl("http://178.62.107.109/testUpload/kmlColourSetter.php?url=https://sturents.com/geo/"+urlname+".kml"+lcolourString+outString+widString+fcolourString+fillString);
+	alert(head+dataArray[0]+tail);
+	newKml.setUrl(head+dataArray[0]+tail);
 	newKml.setMap(map);
-	singleKmls[singleKmls.length]=newKml;
-	singleKmlNames[singleKmlNames.length]=urlname;
+	kmls[kmls.length]=newKml;
+	kmlNames[kmlNames.length]=dataArray[0];
 }
 //Don't bother with order, just stick on end, do random access - when doing 1 at a time order adds nothing of use.
 function singleOn(urlname){
-	//Append urlname to shown kmls in url
+	//Append urlname + data to shown kmls in url
 	//check not already shown
-	if(singleKmlNames.indexOf(urlname)==-1){
-		addKml(urlname,document.colourForm.lineColour.value,document.colourForm.outline.value,document.colourForm.lineWidth.value,document.colourForm.fillColour.value,document.colourForm.fill.value);
-		//TODO extend to add other data to url, once sorted out encoding
+	if(kmlNames.indexOf(urlname)==-1){
+		//get colourForm data
+		var data = [urlname,document.colourForm.lineColour.value,document.colourForm.outline.value,document.colourForm.lineWidth.value,document.colourForm.fillColour.value,document.colourForm.fill.value];
+		addKml(data);
 		if(window.location.hash.length>1){//there are kmls in url
-			window.location.hash+=("&"+urlname+"="+document.colourForm.lineColour.value);
+			window.location.hash+=("&"+data.join(":"));
 		}else{//no current kmls in url
-			window.location.hash+=(urlname+"="+document.colourForm.lineColour.value);
-		}//using hash '#' rather than search '?' makes url work nicely (search reloads page)
-	}//BUT back goes straight to nothing at all shown (does go 'back' in terms of the [now unshown] hash), leavng map/page same.
-		//see window.onhashchange, pushState()
+			window.location.hash+=(data.join(":"));
+		}
+	}
 }
 function singleOff(urlname){
-	var index = singleKmlNames.indexOf(urlname);
+	var index = kmlNames.indexOf(urlname);
 	if(index!=-1){
-		singleKmls[index].setMap(null);
-		singleKmls.splice(index,1);
-		singleKmlNames.splice(index,1);
+		kmls[index].setMap(null);
+		kmls.splice(index,1);
+		kmlNames.splice(index,1);
 		//remove urlname from url
 		//find where the urlname starts in the hash, if there
 		var paramStart = window.location.hash.indexOf(urlname);
@@ -128,8 +119,8 @@ function singleOff(urlname){
 		var isWholeName= false;
 		//while have found a possible and have not found it to be right
 		while((paramStart!=-1)&!isWholeName){
-			//if instance of urlname is preceded by # or &, and followed by & or =
-			if(((window.location.hash.charAt(paramStart-1)=='#')||(window.location.hash.charAt(paramStart-1)=='&'))&((window.location.hash.charAt(paramStart+urlname.length)=='=')||(window.location.hash.charAt(paramStart+urlname.length)=='&'))){
+			//if instance of urlname is preceded by # or &, and followed by :
+			if(((window.location.hash.charAt(paramStart-1)=='#')||(window.location.hash.charAt(paramStart-1)=='&'))&(window.location.hash.charAt(paramStart+urlname.length)==':')){
 				//have found urlname on own, not as part of longer name
 				isWholeName=true;
 			}else{
@@ -161,16 +152,16 @@ Map will go below when put in.
 Line colour:<input type="text" name="lineColour" value="ffe89e40" size=8 maxlength=8>
 Show outline:<select name="outline">
 	<option value="" selected></option>
-	<option value="&out=1">Yes</option>
-	<option value="&out=0">No</option>
+	<option value="1">Yes</option>
+	<option value="0">No</option>
 	</select>
 Line width: <input type="number" name="lineWidth" value="5" size=4>
 	<br/>
 Fill colour : <input type="text" name="fillColour" size=8 maxlength=8>
 Fill polygon : <select name="fill">
 	<option value="" selected></option>
-	<option value="&fill=1">Yes</option>
-	<option value="&fill=0">No</option>
+	<option value="1">Yes</option>
+	<option value="0">No</option>
 	</select>
 If any entry is left blank, it is left as is in original file.
 <br/>
