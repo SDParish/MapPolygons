@@ -72,7 +72,8 @@ function setUpInitialKmls(){
 				colour=splitTarget[1];
 			}
 			//check checkbox and add to map
-			addKml(splitTarget[0],colour);	
+			//TODO extend to extract other data, once sorted out encoding
+			addKml(splitTarget[0],colour,"","","","");	
 			for(j=0;j<fullForm.elements.length;j++){
 				if(fullForm.elements[j].name==splitTarget[0]){
 					fullForm.elements[j].checked =!fullForm.elements[j].checked;
@@ -82,12 +83,19 @@ function setUpInitialKmls(){
 		}
 	}
 }
-function addKml(urlname, colourString){//separate method so can also be called when url is changed
+function addKml(urlname, lcolourString, outString, widString, fcolourString, fillString){//separate method so can also be called when url is changed
 	var newKml =new google.maps.KmlLayer();
-	if(colourString!=""){
-		colourString="&lcol="+colourString+"&wid=2&out=1";
+	if(lcolourString!=""){
+		lcolourString="&lcol="+lcolourString;
 	}
-	newKml.setUrl("http://178.62.107.109/testUpload/kmlColourSetter.php?url=https://sturents.com/geo/"+urlname+".kml"+colourString);
+	if(fcolourString!=""){
+		fcolourString="&fcol="+fcolourString;
+	}
+	if(widString!=""){
+		widString="&wid="+widString;
+	}
+	//alert("http://178.62.107.109/testUpload/kmlColourSetter.php?url=https://sturents.com/geo/"+urlname+".kml"+lcolourString+outString+widString+fcolourString+fillString);
+	newKml.setUrl("http://178.62.107.109/testUpload/kmlColourSetter.php?url=https://sturents.com/geo/"+urlname+".kml"+lcolourString+outString+widString+fcolourString+fillString);
 	newKml.setMap(map);
 	singleKmls[singleKmls.length]=newKml;
 	singleKmlNames[singleKmlNames.length]=urlname;
@@ -97,7 +105,8 @@ function singleOn(urlname){
 	//Append urlname to shown kmls in url
 	//check not already shown
 	if(singleKmlNames.indexOf(urlname)==-1){
-		addKml(urlname,document.colourForm.lineColour.value);
+		addKml(urlname,document.colourForm.lineColour.value,document.colourForm.outline.value,document.colourForm.lineWidth.value,document.colourForm.fillColour.value,document.colourForm.fill.value);
+		//TODO extend to add other data to url, once sorted out encoding
 		if(window.location.hash.length>1){//there are kmls in url
 			window.location.hash+=("&"+urlname+"="+document.colourForm.lineColour.value);
 		}else{//no current kmls in url
@@ -149,7 +158,23 @@ Map will go below when put in.
 </p>
 <div id="mapArea"></div>
 <form name="colourForm" onsubmit="return false;">
-Line colour: <input type="text" name="lineColour" value="ffe89e40" maxlength=8>
+Line colour:<input type="text" name="lineColour" value="ffe89e40" size=8 maxlength=8>
+Show outline:<select name="outline">
+	<option value="" selected></option>
+	<option value="&out=1">Yes</option>
+	<option value="&out=0">No</option>
+	</select>
+Line width: <input type="number" name="lineWidth" value="5" size=4>
+	<br/>
+Fill colour : <input type="text" name="fillColour" size=8 maxlength=8>
+Fill polygon : <select name="fill">
+	<option value="" selected></option>
+	<option value="&fill=1">Yes</option>
+	<option value="&fill=0">No</option>
+	</select>
+If any entry is left blank, it is left as is in original file.
+<br/>
+Colours are in hex, of form aabbggrr, and width is a float.
 </form>
 <!-- Div to hold a dynamically generated form from https://sturents.com/geo/show-all -->
 <div id="fullCheckboxDiv"></div>
